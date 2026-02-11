@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<raid>
+	<!--Announcements-->
+	<announce delay="1000" type="Event" message="Something abnominale is rising! Search for its spawns! Gather an army and destroy this threat!" />
+	<announce delay="30000" type="Event" message="The Abomination's power grows stronger... Defenders of Tibia, unite before its too late!" />
+	<announce delay="60000" type="Event" message="Beware! The ground trembles as The Abomination approaches prepare yourselves for a fierce battle!" />
+	<!--Single Spawns-->
+	<singlespawn delay="60000" name="the abomination" x="32245" y="31165" z="12"/>
+</raid>

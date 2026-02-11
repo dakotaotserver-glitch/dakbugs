@@ -1,0 +1,43 @@
+CREATE TABLE `player_kill_points` (
+  `player_id` int(11) NOT NULL,
+  `player_name` varchar(255) NOT NULL,
+  `points` int(11) DEFAULT 0,
+  `last_update` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `total_kills` int(11) DEFAULT 0,
+  `total_deaths` int(11) DEFAULT 0,
+  `time` bigint(20) DEFAULT unix_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE `bounty_list` (
+  `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `target_name` varchar(255) NOT NULL,
+  `total_bounty` bigint(20) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `time` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `level` int(11) NOT NULL DEFAULT 0,
+  `vocation` int(11) NOT NULL DEFAULT 0,
+  `is_killed` tinyint(1) DEFAULT 0,
+  `hunter_id` int(11) DEFAULT NULL,
+  `hunter_points` int(11) DEFAULT 0,
+  `added_by` varchar(255) NOT NULL,
+  `expire_time` bigint(20) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE `bounty_contributions` (
+  `id` int(11) NOT NULL,
+  `bounty_id` int(11) NOT NULL,
+  `contributor_guid` int(11) NOT NULL,
+  `contributor_name` varchar(255) DEFAULT NULL,
+  `amount` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+ALTER TABLE bounty_list MODIFY COLUMN added_by VARCHAR(255) NOT NULL DEFAULT 'System';
+
+
+
+
+ALTER TABLE bounty_contributions
+  MODIFY COLUMN id INT NOT NULL AUTO_INCREMENT PRIMARY KEY;

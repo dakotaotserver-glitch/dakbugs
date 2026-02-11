@@ -1,0 +1,242 @@
+function Party:onJoin(player)
+	local playerUid = player:getGuid()
+	addEvent(function(playerFuncUid)
+		local playerEvent = Player(playerFuncUid)
+		if not playerEvent then
+			return
+		end
+		local party = playerEvent:getParty()
+		if not party then
+			return
+		end
+		party:refreshHazard()
+	end, 100, playerUid)
+	return true
+end
+
+function Party:onLeave(player)
+	local playerUid = player:getGuid()
+	local members = self:getMembers()
+	table.insert(members, self:getLeader())
+	local memberUids = {}
+	for _, member in ipairs(members) do
+		if member:getGuid() ~= playerUid then
+			table.insert(memberUids, member:getGuid())
+		end
+	end
+
+	addEvent(function(playerFuncUid, memberUidsTableEvent)
+		local playerEvent = Player(playerFuncUid)
+		if playerEvent then
+			playerEvent:updateHazard()
+		end
+
+		for _, memberUid in ipairs(memberUidsTableEvent) do
+			local member = Player(memberUid)
+			if member then
+				local party = member:getParty()
+				if party then
+					party:refreshHazard()
+					return -- Only one player needs to refresh the hazard for the party
+				end
+			end
+		end
+	end, 100, playerUid, memberUids)
+	return true
+end
+
+function Party:onDisband()
+	local members = self:getMembers()
+	table.insert(members, self:getLeader())
+	local memberIds = {}
+	for _, member in ipairs(members) do
+		if member:getId() ~= playerId then
+			table.insert(memberIds, member:getId())
+		end
+	end
+	addEvent(function()
+		for _, memberId in ipairs(memberIds) do
+			local member = Player(memberId)
+			if member then
+				member:updateHazard()
+			end
+		end
+	end, 100)
+	return true
+end
+
+function Party:onShareExperience(exp)
+	local uniqueVocationsCount = self:getUniqueVocationsCount()
+	local partySize = self:getMemberCount() + 1
+
+	-- Formula to calculate the % based on the vocations amount
+	local sharedExperienceMultiplier = ((0.1 * (uniqueVocationsCount ^ 2)) - (0.2 * uniqueVocationsCount) + 1.3)
+	-- Since the formula its non linear, we need to subtract 0.1 if all vocations are present,
+	-- because on all vocations the multiplier is 2.1 and it should be 2.0
+	sharedExperienceMultiplier = partySize < 4 and sharedExperienceMultiplier or sharedExperienceMultiplier - 0.1
+
+	return math.ceil((exp * sharedExperienceMultiplier) / partySize)
+end
+
+
+
+
+-- local PARTY_INACTIVITY_LIMIT = 60 -- segundos
+-- local PARTY_BONUS_THRESHOLD = 10
+-- local PARTY_BONUS_MULTIPLIER = 3.0
+-- local PARTY_CHECK_DELAY = 100
+-- local PARTY_INACTIVITY_CHECK_INTERVAL = 30 -- segundos
+
+-- Storage = Storage or {}
+-- Storage.PartyLastCheck = 30556 -- usada para rastrear última vez com XP ativa
+
+-- -- ███ Party Methods
+
+-- function Party:onJoin(player)
+	-- local uid = player:getGuid()
+	-- player:setStorageValue(Storage.PartyLastCheck, os.time())
+
+	-- addEvent(function(id)
+		-- local p = Player(id)
+		-- if p and p:getParty() then
+			-- p:getParty():refreshHazard()
+		-- end
+	-- end, PARTY_CHECK_DELAY, uid)
+
+	-- return true
+-- end
+
+-- function Party:onLeave(player)
+	-- local uid = player:getGuid()
+	-- local members = self:getMembers()
+	-- table.insert(members, self:getLeader())
+
+	-- local remainingUids = {}
+	-- for _, member in ipairs(members) do
+		-- if member:getGuid() ~= uid then
+			-- table.insert(remainingUids, member:getGuid())
+		-- end
+	-- end
+
+	-- addEvent(function(leaverUid, uids)
+		-- local p = Player(leaverUid)
+		-- if p then
+			-- p:updateHazard()
+		-- end
+
+		-- for _, id in ipairs(uids) do
+			-- local m = Player(id)
+			-- if m and m:getParty() then
+				-- m:getParty():refreshHazard()
+				-- break
+			-- end
+		-- end
+	-- end, PARTY_CHECK_DELAY, uid, remainingUids)
+
+	-- return true
+-- end
+
+-- function Party:onShareExperience(exp)
+	-- local partySize = self:getMemberCount() + 1
+	-- if partySize > PARTY_BONUS_THRESHOLD then
+		-- return math.ceil((exp * PARTY_BONUS_MULTIPLIER) / partySize)
+	-- end
+
+	-- local vocs = self:getUniqueVocationsCount()
+	-- local multiplier = (0.1 * vocs ^ 2) - (0.2 * vocs) + 1.3
+	-- if partySize >= 4 then
+		-- multiplier = multiplier - 0.1
+	-- end
+
+	-- return math.ceil((exp * multiplier) / partySize)
+-- end
+
+-- -- ███ EventCallback para Disband
+-- local cb = EventCallback("PartyOnDisbandEventBaseEvent")
+-- function cb.partyOnDisband(party)
+	-- local members = party:getMembers()
+	-- table.insert(members, party:getLeader())
+
+	-- addEvent(function()
+		-- for _, member in ipairs(members) do
+			-- local p = Player(member:getId())
+			-- if p then p:updateHazard() end
+		-- end
+	-- end, PARTY_CHECK_DELAY)
+
+	-- return true
+-- end
+-- cb:register()
+
+-- -- ███ Auto checker com party:isSharedExperienceActive()
+-- local autoRemoveEvent = GlobalEvent("PartyAutoKickCheck")
+-- function autoRemoveEvent.onThink(interval)
+	-- local now = os.time()
+	-- for _, player in ipairs(Game.getPlayers()) do
+		-- local party = player:getParty()
+		-- if party then
+			-- if party:isSharedExperienceActive() then
+				-- player:setStorageValue(Storage.PartyLastCheck, now)
+			-- else
+				-- local last = player:getStorageValue(Storage.PartyLastCheck)
+				-- if last > 0 and (now - last > PARTY_INACTIVITY_LIMIT) then
+					-- party:removeMember(player)
+					-- player:sendTextMessage(MESSAGE_STATUS_WARNING, "Você foi removido da party por inatividade no compartilhamento de experiência.")
+				-- end
+			-- end
+		-- end
+	-- end
+	-- return true
+-- end
+-- autoRemoveEvent:interval(PARTY_INACTIVITY_CHECK_INTERVAL * 1000)
+-- autoRemoveEvent:register()
+
+-- -- ███ Comando !removeparty
+-- local removeparty = TalkAction("!removeparty")
+-- function removeparty.onSay(player)
+	-- local party = player:getParty()
+	-- if not party then
+		-- player:sendCancelMessage("Você não está em uma party.")
+		-- return false
+	-- end
+
+	-- local now = os.time()
+	-- local removed = 0
+	-- for _, member in ipairs(party:getMembers()) do
+		-- local last = member:getStorageValue(Storage.PartyLastCheck)
+		-- if last == -1 or now - last > PARTY_INACTIVITY_LIMIT then
+			-- party:removeMember(member)
+			-- removed = removed + 1
+		-- end
+	-- end
+
+	-- player:sendTextMessage(MESSAGE_LOOK,
+		-- removed > 0 and ("Removido(s) %d jogador(es) ausente(s)."):format(removed) or "Nenhum jogador ausente foi encontrado.")
+	-- return false
+-- end
+-- removeparty:groupType("normal")
+-- removeparty:register()
+
+-- -- ███ Comando !checkparty com modal corrigido
+-- local checkparty = TalkAction("!checkparty")
+-- function checkparty.onSay(player)
+	-- local party = player:getParty()
+	-- if not party then
+		-- player:sendCancelMessage("Você não está em uma party.")
+		-- return false
+	-- end
+
+	-- local out = {}
+	-- local now = os.time()
+	-- for _, member in ipairs(party:getMembers()) do
+		-- local last = member:getStorageValue(Storage.PartyLastCheck)
+		-- local active = last ~= -1 and (now - last <= PARTY_INACTIVITY_LIMIT)
+		-- local status = active and "[✔️ Ativo]" or "[❌ Inativo]"
+		-- table.insert(out, string.format("%s %s", member:getName(), status))
+	-- end
+
+	-- player:showTextDialog(1950, "Status dos membros da party:\n\n- " .. table.concat(out, "\n- "))
+	-- return false
+-- end
+-- checkparty:groupType("normal")
+-- checkparty:register()
