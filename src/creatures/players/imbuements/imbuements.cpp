@@ -539,7 +539,7 @@ void ImbuementDecay::checkImbuementDecay() {
 			
 			// Define exception imbuements that should always decay regardless of PZ or combat status
 			// Based on imbuements.xml: Category 10 = Increase Speed, 17 = Increase Capacity
-			// Note: Category 19 (Paralysis Deflection) is NOT an exception - it should respect PZ
+			// Note: Category 19 (Vibrancy/Paralysis Deflection) is NOT an exception - it should respect PZ
 			const bool isExceptionImbuement = (imbuementCategory == 10 || imbuementCategory == 17);
 			
 			// Only apply PZ/combat restrictions if this is NOT an exception imbuement
@@ -552,7 +552,7 @@ void ImbuementDecay::checkImbuementDecay() {
 				}
 
 				// Get the tile the player is currently on
-				const auto &playerTile = player->getTile();
+				const auto playerTile = player->getTile();
 				// Check if the player is in a protection zone
 				const bool isInProtectionZone = playerTile && playerTile->hasFlag(TILESTATE_PROTECTIONZONE);
 				// Check if the player is in fight mode
