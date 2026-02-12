@@ -887,6 +887,7 @@ const ImbuementTypeNames imbuementTypeNames = {
 	{ "skillboost magic level", IMBUEMENT_SKILLBOOST_MAGIC_LEVEL },
 	{ "increase capacity", IMBUEMENT_INCREASE_CAPACITY },
 	{ "skillboost fist", IMBUEMENT_SKILLBOOST_FIST }
+	{ "vibrancy", IMBUEMENT_PARALYSIS_DEFLECTION } 
 };
 
 /**
