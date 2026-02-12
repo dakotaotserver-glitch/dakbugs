@@ -526,13 +526,14 @@ void ImbuementDecay::checkImbuementDecay() {
 			// Imbuement from imbuementInfo, this variable reduces code complexity
 			const auto imbuement = imbuementInfo.imbuement;
 			
-			// Get the imbuement type
-			const ImbuementTypes_t imbuementType = static_cast<ImbuementTypes_t>(imbuement->getBaseID());
+			// Get the imbuement category (not base ID)
+			const uint16_t imbuementCategory = imbuement->getCategory();
 			
 			// Define exception imbuements that should always decay regardless of PZ or combat status
-			const bool isExceptionImbuement = (imbuementType == IMBUEMENT_INCREASE_CAPACITY || 
-			                                    imbuementType == IMBUEMENT_INCREASE_SPEED || 
-			                                    imbuementType == IMBUEMENT_PARALYSIS_REMOVAL);
+			// Category 10 = Increase Speed, Category 17 = Increase Capacity, Category 19 = Paralysis Deflection
+			const bool isExceptionImbuement = (imbuementCategory == 10 || 
+			                                    imbuementCategory == 17 || 
+			                                    imbuementCategory == 19);
 			
 			// Only apply PZ/combat restrictions if this is NOT an exception imbuement
 			if (!isExceptionImbuement) {
