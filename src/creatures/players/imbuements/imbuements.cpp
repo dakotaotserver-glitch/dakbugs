@@ -547,19 +547,27 @@ void ImbuementDecay::checkImbuementDecay() {
 				bool nonAggressiveFightOnly = g_configManager().getBoolean(TOGGLE_IMBUEMENT_NON_AGGRESSIVE_FIGHT_ONLY);
 
 				// Get the category of the imbuement
-				const CategoryImbuement* categoryImbuement = g_imbuements().getCategoryByID(imbuement->getCategory());
-				// Parent of the imbued item
-				const auto &parent = item->getParent();
-				const bool &isInBackpack = parent && parent->getContainer();
-				// If the imbuement is aggressive and the player is not in fight mode or is in a protection zone, or the item is in a container, skip decay.
-				if (categoryImbuement && (categoryImbuement->agressive || nonAggressiveFightOnly) && (isInProtectionZone || !isInFightMode || isInBackpack)) {
-					continue;
-				}
-				// If the item is not in the backpack slot and it's not a agressive imbuement, skip decay.
-				if (categoryImbuement && !categoryImbuement->agressive && parent && parent != player) {
-					continue;
-				}
-			}
+// Exception imbuements (Speed, Capacity, Paralysis Deflection) always decay
+			if (isExceptionImbuement) {
+    // Always decay, don't skip
+			} else {
+    // Get the tile the player is currently on
+    		const auto &playerTile = player->getTile();
+    // Check if the player is in a protection zone
+    		const bool &isInProtectionZone = playerTile && playerTile->hasFlag(TILESTATE_PROTECTIONZONE);
+    // Check if the player is in fight mode
+   			bool isInFightMode = player->hasCondition(CONDITION_INFIGHT);
+    		bool nonAggressiveFightOnly = g_configManager().getBoolean(TOGGLE_IMBUEMENT_NON_AGGRESSIVE_FIGHT_ONLY);
+
+    // If the imbuement is aggressive and the player is not in fight mode or is in a protection zone, or the item is in a container, skip decay.
+    	if (categoryImbuement && (categoryImbuement->agressive || nonAggressiveFightOnly) && (isInProtectionZone || !isInFightMode || isInBackpack)) {
+        	continue;
+    }
+    // If the item is not in the backpack slot and it's not a agressive imbuement, skip decay.
+   			 if (categoryImbuement && !categoryImbuement->agressive && parent && parent != player) {
+       		 continue;
+    }
+}
 
 			// If the imbuement's duration is 0, remove its stats and continue to the next slot
 			if (imbuementInfo.duration == 0) {
