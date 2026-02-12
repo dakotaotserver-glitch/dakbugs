@@ -887,9 +887,8 @@ const ImbuementTypeNames imbuementTypeNames = {
 	{ "skillboost magic level", IMBUEMENT_SKILLBOOST_MAGIC_LEVEL },
 	{ "increase capacity", IMBUEMENT_INCREASE_CAPACITY },
 	{ "skillboost fist", IMBUEMENT_SKILLBOOST_FIST },
-	{ "Vibrancy", IMBUEMENT_PARALYSIS_DEFLECTION }, 
+	{ "paralysis deflection", IMBUEMENT_PARALYSIS_DEFLECTION }
 };
-
 /**
  * @Deprecated
  * It will be dropped with monsters. Use RespawnPeriod_t instead.
