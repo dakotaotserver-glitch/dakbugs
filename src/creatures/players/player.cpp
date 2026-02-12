@@ -1087,55 +1087,64 @@ bool Player::checkLastAttackWithin(uint32_t interval) const {
 	return lastAttack > 0 && ((OTSYS_TIME() - lastAttack) < interval);
 }
 
-void Player::updateLastAttack() {
-	if (lastAttack == 0) {
-		lastAttack = OTSYS_TIME() - getAttackSpeed() - 1;
-		return;
-	}
-	lastAttack = OTSYS_TIME();
+const auto tile = getTile();
+const bool isInProtectionZone = tile && tile->hasFlag(TILESTATE_PROTECTIONZONE);
+const bool isInFightMode = hasCondition(CONDITION_INFIGHT);
+
+for (auto [slot, item] : getAllSlotItems()) {
+    if (item->getTopParent().get() != this) {
+        continue;
+    }
+
+    const uint8_t imbuementSlots = item->getImbuementSlot();
+    for (uint8_t imbuementSlot = 0; imbuementSlot < imbuementSlots; ++imbuementSlot) {
+        ImbuementInfo imbuementInfo;
+        if (!item->getImbuementInfo(imbuementSlot, &imbuementInfo)) {
+            continue;
+        }
+
+        const auto imbuement = imbuementInfo.imbuement;
+        const auto categoryImbuement = g_imbuements().getCategoryByID(imbuement->getCategory());
+
+        bool isPassiveException = (imbuement->getName() == "Increase Capacity" || imbuement->getName() == "Paralysis Deflection" || imbuement->getName() == "Increase Speed");  // Use names or IDs for exceptions
+
+        const bool isInBackpack = item->getContainer() && item->getParent()->getPlayer() == this;
+
+        if (isInBackpack) {
+            continue;
+        }
+
+        // Para normais (!passive): skip se PZ ou !fight
+        if (!isPassiveException) {
+            if (isInProtectionZone) {
+                continue;
+            }
+            if (!isInFightMode) {
+                continue;
+            }
+        }
+
+        if (imbuementInfo.duration == 0) {
+            removeItemImbuementStats(imbuement);
+            continue;
+        }
+
+        if (decayOnly) {
+            imbuementInfo.duration -= EVENT_IMBUEMENT_INTERVAL / 1000;
+            item->decayImbuementTime(imbuementSlot, imbuementInfo.duration);
+            if (imbuementInfo.duration <= 0) {
+                removeItemImbuementStats(imbuement);
+            }
+            continue;
+        }
+
+        addItemImbuementStats(imbuement, false);
+    }
 }
 
-uint64_t Player::getLastAggressiveAction() const {
-	return lastAggressiveAction;
-}
+        addItemImbuementStats(imbuement, false);
+    }
 
-bool Player::checkLastAggressiveActionWithin(uint32_t interval) const {
-	return lastAggressiveAction > 0 && ((OTSYS_TIME() - lastAggressiveAction) < interval);
-}
-
-void Player::updateLastAggressiveAction() {
-	lastAggressiveAction = OTSYS_TIME();
-}
-
-void Player::addSkillAdvance(skills_t skill, uint64_t count) {
-	uint64_t currReqTries = vocation->getReqSkillTries(skill, skills[skill].level);
-	uint64_t nextReqTries = vocation->getReqSkillTries(skill, skills[skill].level + 1);
-	if (currReqTries >= nextReqTries) {
-		// player has reached max skill
-		return;
-	}
-
-	g_events().eventPlayerOnGainSkillTries(static_self_cast<Player>(), skill, count);
-	g_callbacks().executeCallback(EventCallback_t::playerOnGainSkillTries, &EventCallback::playerOnGainSkillTries, getPlayer(), std::ref(skill), std::ref(count));
-	if (count == 0) {
-		return;
-	}
-
-	bool sendUpdateSkills = false;
-	while ((skills[skill].tries + count) >= nextReqTries) {
-		count -= nextReqTries - skills[skill].tries;
-		skills[skill].level++;
-		skills[skill].tries = 0;
-		skills[skill].percent = 0;
-
-		std::ostringstream ss;
-		ss << "You advanced to " << getSkillName(skill) << " level " << skills[skill].level << '.';
-		sendTextMessage(MESSAGE_EVENT_ADVANCE, ss.str());
-		if (skill == SKILL_LEVEL) {
-			sendTakeScreenshot(SCREENSHOT_TYPE_LEVELUP);
-		} else {
-			sendTakeScreenshot(SCREENSHOT_TYPE_SKILLUP);
-		}
 
 		g_creatureEvents().playerAdvance(static_self_cast<Player>(), skill, (skills[skill].level - 1), skills[skill].level);
 
@@ -1146,7 +1155,6 @@ void Player::addSkillAdvance(skills_t skill, uint64_t count) {
 			count = 0;
 			break;
 		}
-	}
 
 	skills[skill].tries += count;
 
@@ -1166,7 +1174,7 @@ void Player::addSkillAdvance(skills_t skill, uint64_t count) {
 		sendSkills();
 		sendStats();
 	}
-}
+1
 
 void Player::setVarStats(stats_t stat, int32_t modifier) {
 	varStats[stat] += modifier;
