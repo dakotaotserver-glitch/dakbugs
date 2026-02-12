@@ -481,26 +481,7 @@ void ImbuementDecay::stopImbuementDecay(const std::shared_ptr<Item> &item) {
 
 	g_logger().debug("Stopping imbuement decay for item {}", item->getName());
 
-	int64_t currentTime = OTSYS_TIME();
-	int64_t elapsedTime = currentTime - m_lastUpdateTime;
-
-	for (uint8_t slotid = 0; slotid < item->getImbuementSlot(); ++slotid) {
-		ImbuementInfo imbuementInfo;
-		if (!item->getImbuementInfo(slotid, &imbuementInfo)) {
-			continue;
-		}
-
-		uint32_t duration = imbuementInfo.duration > elapsedTime / 1000 ? imbuementInfo.duration - static_cast<uint32_t>(elapsedTime / 1000) : 0;
-		item->decayImbuementTime(slotid, imbuementInfo.imbuement->getID(), duration);
-
-		if (duration == 0) {
-			if (auto player = item->getHoldingPlayer()) {
-				player->removeItemImbuementStats(imbuementInfo.imbuement);
-				player->updateImbuementTrackerStats();
-			}
-		}
-	}
-
+	// Only remove the item from decay tracking, do NOT modify the timer
 	m_itemsToDecay.erase(item);
 
 	if (m_itemsToDecay.empty() && m_eventId != 0) {
@@ -542,28 +523,42 @@ void ImbuementDecay::checkImbuementDecay() {
 				continue;
 			}
 
-			// Get the tile the player is currently on
-			const auto &playerTile = player->getTile();
-			// Check if the player is in a protection zone
-			const bool &isInProtectionZone = playerTile && playerTile->hasFlag(TILESTATE_PROTECTIONZONE);
-			// Check if the player is in fight mode
-			bool isInFightMode = player->hasCondition(CONDITION_INFIGHT);
-			bool nonAggressiveFightOnly = g_configManager().getBoolean(TOGGLE_IMBUEMENT_NON_AGGRESSIVE_FIGHT_ONLY);
-
 			// Imbuement from imbuementInfo, this variable reduces code complexity
 			const auto imbuement = imbuementInfo.imbuement;
-			// Get the category of the imbuement
-			const CategoryImbuement* categoryImbuement = g_imbuements().getCategoryByID(imbuement->getCategory());
-			// Parent of the imbued item
-			const auto &parent = item->getParent();
-			const bool &isInBackpack = parent && parent->getContainer();
-			// If the imbuement is aggressive and the player is not in fight mode or is in a protection zone, or the item is in a container, ignore it.
-			if (categoryImbuement && (categoryImbuement->agressive || nonAggressiveFightOnly) && (isInProtectionZone || !isInFightMode || isInBackpack)) {
-				continue;
-			}
-			// If the item is not in the backpack slot and it's not a agressive imbuement, ignore it.
-			if (categoryImbuement && !categoryImbuement->agressive && parent && parent != player) {
-				continue;
+			
+			// Get the imbuement category (which defines the type of imbuement effect)
+			// This is different from the base ID (1=Basic, 2=Intricate, 3=Powerful)
+			const uint16_t imbuementCategory = imbuement->getCategory();
+			
+			// Define exception imbuements that should always decay regardless of PZ or combat status
+			// Based on imbuements.xml: Category 10 = Increase Speed, 17 = Increase Capacity, 19 = Paralysis Deflection
+			const bool isExceptionImbuement = (imbuementCategory == 10 || 
+			                                    imbuementCategory == 17 || 
+			                                    imbuementCategory == 19);
+			
+			// Only apply PZ/combat restrictions if this is NOT an exception imbuement
+			if (!isExceptionImbuement) {
+				// Get the tile the player is currently on
+				const auto &playerTile = player->getTile();
+				// Check if the player is in a protection zone
+				const bool &isInProtectionZone = playerTile && playerTile->hasFlag(TILESTATE_PROTECTIONZONE);
+				// Check if the player is in fight mode
+				bool isInFightMode = player->hasCondition(CONDITION_INFIGHT);
+				bool nonAggressiveFightOnly = g_configManager().getBoolean(TOGGLE_IMBUEMENT_NON_AGGRESSIVE_FIGHT_ONLY);
+
+				// Get the category of the imbuement
+				const CategoryImbuement* categoryImbuement = g_imbuements().getCategoryByID(imbuement->getCategory());
+				// Parent of the imbued item
+				const auto &parent = item->getParent();
+				const bool &isInBackpack = parent && parent->getContainer();
+				// If the imbuement is aggressive and the player is not in fight mode or is in a protection zone, or the item is in a container, skip decay.
+				if (categoryImbuement && (categoryImbuement->agressive || nonAggressiveFightOnly) && (isInProtectionZone || !isInFightMode || isInBackpack)) {
+					continue;
+				}
+				// If the item is not in the backpack slot and it's not a agressive imbuement, skip decay.
+				if (categoryImbuement && !categoryImbuement->agressive && parent && parent != player) {
+					continue;
+				}
 			}
 
 			// If the imbuement's duration is 0, remove its stats and continue to the next slot
