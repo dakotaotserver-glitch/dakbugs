@@ -2596,7 +2596,8 @@ void Player::onChangeZone(ZoneType_t zone) {
 		// When leaving protection zone, start imbuement decay for equipped items with imbuements
 		// Note: startImbuementDecay() is idempotent (won't duplicate if already tracking)
 		// Exception imbuements (Speed/Capacity) may already be decaying, but re-adding is safe
-		for (const auto &[slot, item] : getAllSlotItems()) {
+		const auto slotItems = getAllSlotItems();
+		for (const auto &[slot, item] : slotItems) {
 			if (!item || item->getImbuementSlot() == 0) {
 				continue;
 			}
