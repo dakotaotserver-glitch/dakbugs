@@ -2662,7 +2662,7 @@
 		<attribute key="weight" value="750"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="35"/>
@@ -2730,7 +2730,7 @@
 		<attribute key="weight" value="750"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="35"/>
@@ -2746,7 +2746,7 @@
 		<attribute key="weight" value="750"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="35"/>
@@ -2762,7 +2762,7 @@
 		<attribute key="weight" value="750"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="35"/>
@@ -7228,7 +7228,7 @@
 		<attribute key="speed" value="20"/>
 		<attribute key="weight" value="750"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -11087,7 +11087,7 @@
 		<attribute key="weight" value="1000"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -11098,7 +11098,7 @@
 		<attribute key="weight" value="600"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -11110,7 +11110,7 @@
 		<attribute key="weight" value="900"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -11121,7 +11121,7 @@
 		<attribute key="weight" value="600"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -11133,7 +11133,7 @@
 		<attribute key="weight" value="2900"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -11145,7 +11145,7 @@
 		<attribute key="weight" value="3100"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -11157,7 +11157,7 @@
 		<attribute key="weight" value="900"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -12139,7 +12139,7 @@
 		<attribute key="armor" value="3"/>
 		<attribute key="weight" value="2500"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="80"/>
@@ -14913,7 +14913,7 @@
 		<attribute key="weight" value="800"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -20537,7 +20537,7 @@
 		<attribute key="armor" value="2"/>
 		<attribute key="weight" value="1200"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 			<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -23946,7 +23946,7 @@
 		<attribute key="weight" value="600"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -26517,7 +26517,7 @@
 		<attribute key="weight" value="1850"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="70"/>
@@ -26533,7 +26533,7 @@
 		<attribute key="weight" value="1850"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="70"/>
@@ -26873,7 +26873,7 @@
     <attribute key="weight" value="2250"/>
     <attribute key="imbuementslot" value="1">
         <attribute key="increase speed" value="3"/>
-        <attribute key="Paralysis Deflection" value="3"/>
+        <attribute key="paralysis deflection" value="3"/>
     </attribute>
     <attribute key="level" value="70"/>
     <attribute key="slot" value="feet"/>
@@ -27166,7 +27166,7 @@
 		<attribute key="armor" value="1"/>
 		<attribute key="weight" value="700"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -32003,7 +32003,7 @@
 		<attribute key="armor" value="3"/>
 		<attribute key="weight" value="3700"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="150"/>
@@ -34231,7 +34231,7 @@
 		<attribute key="weight" value="1800"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="150"/>
@@ -39569,7 +39569,7 @@
 		<attribute key="weight" value="1150"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -41887,7 +41887,7 @@
 		<attribute key="weight" value="1800"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="50"/>
@@ -43540,7 +43540,7 @@
 		<attribute key="armor" value="2"/>
 		<attribute key="weight" value="500"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="80"/>
@@ -43964,7 +43964,7 @@
 		<attribute key="armor" value="2"/>
 		<attribute key="weight" value="1200"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			<attribute key="increase speed" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
@@ -57331,7 +57331,7 @@
 		<attribute key="armor" value="3"/>
 		<attribute key="weight" value="900"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="220"/>
@@ -59347,7 +59347,7 @@
 		<attribute key="armor" value="2"/>
 		<attribute key="weight" value="1200"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="220"/>
@@ -61800,7 +61800,7 @@
 		<attribute key="weight" value="1300"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="140"/>
@@ -66027,7 +66027,7 @@
 		<attribute key="weight" value="1450"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="150"/>
@@ -66043,7 +66043,7 @@
 		<attribute key="weight" value="1450"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="150"/>
@@ -70637,7 +70637,7 @@
 		<attribute key="weight" value="600"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="slot" value="feet"/>
@@ -71615,7 +71615,7 @@
 		<attribute key="weight" value="1100"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="270"/>
@@ -71670,7 +71670,7 @@
 		<attribute key="weight" value="980"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="270"/>
@@ -74035,7 +74035,7 @@
 		<attribute key="weight" value="1600"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="250"/>
@@ -74051,7 +74051,7 @@
 		<attribute key="weight" value="1100"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="250"/>
@@ -76234,7 +76234,7 @@
 		<attribute key="armor" value="3"/>
 		<attribute key="weight" value="1900"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="augments" value="1">
 			<attribute key="avatar of storm" value="cooldown">
@@ -76345,7 +76345,7 @@
 		<attribute key="armor" value="3"/>
 		<attribute key="weight" value="1700"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="augments" value="1">
 			<attribute key="avatar of nature" value="cooldown">
@@ -76781,7 +76781,7 @@
 		<attribute key="skilldist" value="1"/>
 		<attribute key="weight" value="1500"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="augments" value="1">
 			<attribute key="divine missile" value="critical extra damage">
@@ -76801,7 +76801,7 @@
 		<attribute key="absorbpercentice" value="6"/>
 		<attribute key="weight" value="900"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="augments" value="1">
 			<attribute key="great energy beam" value="critical extra damage">
@@ -83552,7 +83552,7 @@
 		<attribute key="absorbpercentice" value="6"/>
 		<attribute key="weight" value="1300"/>
 		<attribute key="imbuementslot" value="1">
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="400"/>
@@ -83867,7 +83867,7 @@
 		<attribute key="weight" value="1300"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="300"/>
@@ -83883,7 +83883,7 @@
 		<attribute key="weight" value="900"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="8"/>
@@ -84161,7 +84161,7 @@
 		<attribute key="weight" value="700"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="80"/>
@@ -84178,7 +84178,7 @@
 		<attribute key="weight" value="1100"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="150"/>
@@ -84194,7 +84194,7 @@
 		<attribute key="weight" value="800"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 		</attribute>
 		<attribute key="script" value="moveevent">
 			<attribute key="level" value="250"/>
@@ -84736,7 +84736,7 @@
 	<attribute key="weight" value="1250"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 	<attribute key="augments" value="1">
 		<attribute key="brutal strike" value="base">
@@ -84757,7 +84757,7 @@
 	<attribute key="weight" value="1100"/>
 		<attribute key="imbuementslot" value="1">
 			<attribute key="increase speed" value="3"/>
-			<attribute key="Paralysis Deflection" value="3"/>
+			<attribute key="paralysis deflection" value="3"/>
 			</attribute>
 	<attribute key="augments" value="1">
 		<attribute key="ultimate energy strike" value="base">
