@@ -1,13 +1,16 @@
-// Updated parseImbuement function to handle vibrancy mapping and log key attributes
+// Code modifications in item_parse.cpp
 
-void parseImbuement(imbuementType imbuement) {
-    // Handle vibrancy mapping
-    if (imbuement.vibrancyMapping) {
-        log("Vibrancy mapped: " + imbuement.vibrancyMapping);
+#include <iostream>
+
+void parseImbuement() {
+    // Other code logic...
+    // Line 1042 fix for logging
+    std::cout << "SubKey Attribute: " << subKeyAttribute << std::endl;
+    
+    // Logic check for getImbuementType result...
+    auto imbuementType = getImbuementType();
+    if (imbuementType != InvalidType) {
+        // Continue processing...
     }
-    
-    // Log key attributes instead of value attributes
-    log("Key Attribute: " + imbuement.keyAttribute);
-    
-    // Additional logic for parsing imbuement...
+    // Other code logic...
 }
