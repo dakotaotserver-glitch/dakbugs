@@ -262,6 +262,7 @@ const phmap::flat_hash_map<std::string, ImbuementTypes_t> ImbuementsTypeMap = {
 	{ "increase capacity", IMBUEMENT_INCREASE_CAPACITY },
 	{ "skillboost fist", IMBUEMENT_SKILLBOOST_FIST },
 	{ "paralysis removal", IMBUEMENT_PARALYSIS_REMOVAL },
+	{ "vibrancy", IMBUEMENT_PARALYSIS_REMOVAL },
 };
 
 const phmap::flat_hash_map<Augment_t, ConfigKey_t> AugmentWithoutValueDescriptionDefaultKeys = {
