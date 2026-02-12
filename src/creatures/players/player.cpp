@@ -2495,7 +2495,19 @@ void Player::onApplyImbuement(const Imbuement* imbuement, const std::shared_ptr<
 			addItemImbuementStats(imbuement);
 		}
 		item->setImbuement(slot, imbuement->getID(), baseImbuement->duration);
-		g_imbuementDecay().startImbuementDecay(item);
+		
+		// Only start imbuement decay if player is not in a protection zone
+		// Exception imbuements (Speed, Capacity) always start decay
+		const uint16_t imbuementCategory = imbuement->getCategory();
+		const bool isExceptionImbuement = (imbuementCategory == 10 || imbuementCategory == 17);
+		
+		const auto playerTile = thisPlayer->getTile();
+		const bool isInProtectionZone = playerTile && playerTile->hasFlag(TILESTATE_PROTECTIONZONE);
+		
+		// Start decay if: it's an exception imbuement OR player is not in PZ
+		if (isExceptionImbuement || !isInProtectionZone) {
+			g_imbuementDecay().startImbuementDecay(item);
+		}
 	}
 
 	openImbuementWindow(item);
@@ -2579,6 +2591,30 @@ void Player::onChangeZone(ZoneType_t zone) {
 		if (wasMounted) {
 			toggleMount(true);
 			wasMounted = false;
+		}
+		
+		// When leaving protection zone, start imbuement decay for equipped items with imbuements
+		// Note: startImbuementDecay() is idempotent (won't duplicate if already tracking)
+		// Exception imbuements (Speed/Capacity) may already be decaying, but re-adding is safe
+		for (const auto &[slot, item] : getAllSlotItems()) {
+			if (!item || item->getImbuementSlot() == 0) {
+				continue;
+			}
+			
+			// Check if item has any active imbuements before starting decay
+			bool hasActiveImbuement = false;
+			for (uint8_t i = 0; i < item->getImbuementSlot(); ++i) {
+				ImbuementInfo info;
+				if (item->getImbuementInfo(i, &info) && info.imbuement && info.duration > 0) {
+					hasActiveImbuement = true;
+					break;
+				}
+			}
+			
+			if (hasActiveImbuement) {
+				// Start decay tracking for items with imbuements (safe to call multiple times)
+				g_imbuementDecay().startImbuementDecay(item);
+			}
 		}
 	}
 
