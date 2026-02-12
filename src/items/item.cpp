@@ -1454,18 +1454,6 @@ Item::getDescriptions(const ItemType &it, const std::shared_ptr<Item> &item /*= 
 				descriptions.emplace_back("Skill Boost", ss.str());
 			}
 
-			if (it.abilities->stats[STAT_MAGICPOINTS]) {
-				ss.str("");
-				ss << std::showpos << it.abilities->stats[STAT_MAGICPOINTS] << std::noshowpos;
-				descriptions.emplace_back("Magic Level", ss.str());
-			}
-
-			for (uint8_t i = 1; i <= 11; i++) {
-				if (it.abilities->stats[STAT_MAGICPOINTS]) {
-   			 		ss.str("");
-    				ss << std::showpos << it.abilities->stats[STAT_MAGICPOINTS] << std::noshowpos;
-   					 descriptions.emplace_back("Magic Level", ss.str());
-			}
 
 			for (uint8_t i = 1; i <= 11; i++) {
    			 if (it.abilities->specializedMagicLevel[i]) {
