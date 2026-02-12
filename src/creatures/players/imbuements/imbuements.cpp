@@ -526,11 +526,12 @@ void ImbuementDecay::checkImbuementDecay() {
 			// Imbuement from imbuementInfo, this variable reduces code complexity
 			const auto imbuement = imbuementInfo.imbuement;
 			
-			// Get the imbuement category (not base ID)
+			// Get the imbuement category (which defines the type of imbuement effect)
+			// This is different from the base ID (1=Basic, 2=Intricate, 3=Powerful)
 			const uint16_t imbuementCategory = imbuement->getCategory();
 			
 			// Define exception imbuements that should always decay regardless of PZ or combat status
-			// Category 10 = Increase Speed, Category 17 = Increase Capacity, Category 19 = Paralysis Deflection
+			// Based on imbuements.xml: Category 10 = Increase Speed, 17 = Increase Capacity, 19 = Paralysis Deflection
 			const bool isExceptionImbuement = (imbuementCategory == 10 || 
 			                                    imbuementCategory == 17 || 
 			                                    imbuementCategory == 19);
