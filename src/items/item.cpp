@@ -1461,15 +1461,22 @@ Item::getDescriptions(const ItemType &it, const std::shared_ptr<Item> &item /*= 
 			}
 
 			for (uint8_t i = 1; i <= 11; i++) {
-				if (it.abilities->specializedMagicLevel[i]) {
-					ss.str("");
-
-					ss << std::showpos << it.abilities->specializedMagicLevel[i] << std::noshowpos;
-					std::string combatName = getCombatName(indexToCombatType(i));
-					combatName[0] = toupper(combatName[0]);
-					descriptions.emplace_back(combatName + " Magic Level", ss.str());
-				}
+				if (it.abilities->stats[STAT_MAGICPOINTS]) {
+   			 		ss.str("");
+    				ss << std::showpos << it.abilities->stats[STAT_MAGICPOINTS] << std::noshowpos;
+   					 descriptions.emplace_back("Magic Level", ss.str());
 			}
+
+			for (uint8_t i = 1; i <= 11; i++) {
+   			 if (it.abilities->specializedMagicLevel[i]) {
+        	ss.str("");
+
+        	ss << std::showpos << it.abilities->specializedMagicLevel[i] << std::noshowpos;
+        	std::string combatName = getCombatName(indexToCombatType(i));
+        	combatName[0] = toupper(combatName[0]);
+       		descriptions.emplace_back(combatName + " Magic Level", ss.str());
+   		 	}
+		}
 
 			if (it.abilities->magicShieldCapacityFlat || it.abilities->magicShieldCapacityPercent) {
 				ss.str("");
