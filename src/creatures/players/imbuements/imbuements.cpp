@@ -50,25 +50,9 @@ void ImbuementDecay::stopImbuementDecay(const std::shared_ptr<Item> &item) {
 
 	g_logger().debug("Stopping imbuement decay for item {}", item->getName());
 
-	int64_t currentTime = OTSYS_TIME();
-	int64_t elapsedTime = currentTime - m_lastUpdateTime;
-
-	for (uint8_t slotid = 0; slotid < item->getImbuementSlot(); ++slotid) {
-		ImbuementInfo imbuementInfo;
-		if (!item->getImbuementInfo(slotid, &imbuementInfo)) {
-			continue;
-		}
-
-		uint32_t duration = imbuementInfo.duration > elapsedTime / 1000 ? imbuementInfo.duration - static_cast<uint32_t>(elapsedTime / 1000) : 0;
-		item->decayImbuementTime(slotid, imbuementInfo.imbuement->getID(), duration);
-
-		if (duration == 0) {
-			if (auto player = item->getHoldingPlayer()) {
-				player->removeItemImbuementStats(imbuementInfo.imbuement);
-				player->updateImbuementTrackerStats();
-			}
-		}
-	}
+	// CORREÇÃO: Não descontar tempo ao parar o decay.
+	// O checkImbuementDecay já faz a dedução corretamente a cada 60 segundos.
+	// Evita a dupla dedução que causava imbuements acabando mais rápido.
 
 	m_itemsToDecay.erase(item);
 
@@ -95,7 +79,6 @@ void ImbuementDecay::checkImbuementDecay() {
 			continue;
 		}
 
-		// Get the player holding the item (if any)
 		auto player = item->getHoldingPlayer();
 		if (!player) {
 			g_logger().debug("Item {} is not held by any player. Skipping decay.", item->getName());
@@ -111,39 +94,34 @@ void ImbuementDecay::checkImbuementDecay() {
 				continue;
 			}
 
-			// Get the tile the player is currently on
 			const auto &playerTile = player->getTile();
-			// Check if the player is in a protection zone
-			const bool &isInProtectionZone = playerTile && playerTile->hasFlag(TILESTATE_PROTECTIONZONE);
-			// Check if the player is in fight mode
+			const bool isInProtectionZone = playerTile && playerTile->hasFlag(TILESTATE_PROTECTIONZONE);
 			bool isInFightMode = player->hasCondition(CONDITION_INFIGHT);
 
-			// Imbuement from imbuementInfo, this variable reduces code complexity
 			const auto imbuement = imbuementInfo.imbuement;
-			// Get the category of the imbuement
 			const CategoryImbuement* categoryImbuement = g_imbuements().getCategoryByID(imbuement->getCategory());
-			// Parent of the imbued item
+
 			const auto &parent = item->getParent();
-			const bool &isInBackpack = parent && parent->getContainer();
+			const bool isInBackpack = parent && parent->getContainer();
 
-			// Modified logic: Define exceptions and apply custom skip rules
-			bool isPassiveException = (imbuement->getName() == "Increase Capacity" || imbuement->getName() == "Paralysis Deflection" || imbuement->getName() == "Increase Speed");
+			// Item na backpack = não equipado = não decai
+			if (isInBackpack) {
+				continue;
+			}
 
-			// For exceptions: decay always if equipped (not in backpack)
-			if (isPassiveException) {
-				if (isInBackpack) {
-					continue;
-				}
-			} else {
-				// For normal imbuements: decay only in PVP/PVE combat (not in PZ, in fight mode, not in backpack)
-				if (isInProtectionZone || !isInFightMode || isInBackpack) {
+			// CORREÇÃO: Usar categoryImbuement->agressive (do XML) ao invés de comparar nomes
+			// agressive=0 no XML: Increase Speed (cat 10), Increase Capacity (cat 17), Paralysis Deflection (cat 19)
+			// Essas decaem SEMPRE que equipadas, mesmo em PZ e fora de combate.
+			bool isNonAggressive = (categoryImbuement && !categoryImbuement->agressive);
+
+			if (!isNonAggressive) {
+				// Imbuements agressivos: só decaem em combate PVP/PVE e FORA de PZ
+				if (isInProtectionZone || !isInFightMode) {
 					continue;
 				}
 			}
+			// Se isNonAggressive, cai direto aqui (decai sempre que equipado)
 
-			// Removed the original second if for !agressive, as it's redundant with new logic
-
-			// If the imbuement's duration is 0, remove its stats and continue to the next slot
 			if (imbuementInfo.duration == 0) {
 				player->removeItemImbuementStats(imbuement);
 				player->updateImbuementTrackerStats();
@@ -151,7 +129,6 @@ void ImbuementDecay::checkImbuementDecay() {
 			}
 
 			g_logger().debug("Decaying imbuement {} from item {} of player {}", imbuement->getName(), item->getName(), player->getName());
-			// Calculate the new duration of the imbuement, making sure it doesn't go below 0
 			uint32_t duration = imbuementInfo.duration > elapsedTime / 1000 ? imbuementInfo.duration - static_cast<uint32_t>(elapsedTime / 1000) : 0;
 			item->decayImbuementTime(slotid, imbuement->getID(), duration);
 
@@ -168,12 +145,10 @@ void ImbuementDecay::checkImbuementDecay() {
 		}
 	}
 
-	// Remove items whose imbuements have expired
 	for (const auto &item : itemsToRemove) {
 		m_itemsToDecay.erase(item);
 	}
 
-	// Reschedule the event if there are still items
 	if (!m_itemsToDecay.empty()) {
 		m_eventId = g_dispatcher().scheduleEvent(
 			60000, [this] { checkImbuementDecay(); }, "ImbuementDecay::checkImbuementDecay"
