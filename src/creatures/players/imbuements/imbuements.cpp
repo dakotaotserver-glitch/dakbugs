@@ -59,7 +59,7 @@ bool Imbuements::loadFromXml(bool /* reloading */) {
 				pugi::cast<uint16_t>(id.value()),
 				baseNode.attribute("name").as_string(),
 				pugi::cast<uint32_t>(baseNode.attribute("price").value()),
-								pugi::cast<uint32_t>(baseNode.attribute("removecost").value()),
+				pugi::cast<uint32_t>(baseNode.attribute("removecost").value()),
 				pugi::cast<uint32_t>(baseNode.attribute("duration").value())
 			);
 
@@ -85,7 +85,7 @@ bool Imbuements::loadFromXml(bool /* reloading */) {
 				continue;
 			}
 
-			uint16_t baseid = pugi::cast<uint32_t>(base.value());
+			uint16_t baseid = pugi::cast<uint16_t>(base.value());
 			auto groupBase = getBaseByID(baseid);
 			if (groupBase == nullptr) {
 				g_logger().warn("Group base '{}' not exist", baseid);
@@ -158,8 +158,8 @@ bool Imbuements::loadFromXml(bool /* reloading */) {
 					continue;
 				}
 
-				std::string type = attr.as_string();
-				if (strcasecmp(type.c_str(), "item") == 0) {
+				std::string key = attr.as_string();
+				if (strcasecmp(key.c_str(), "item") == 0) {
 					if (!((attr = childNode.attribute("value")))) {
 						g_logger().warn("Missing item ID for imbuement name '{}'", imbuement.name);
 						continue;
@@ -168,7 +168,7 @@ bool Imbuements::loadFromXml(bool /* reloading */) {
 
 					uint16_t count = 1;
 					if ((attr = childNode.attribute("count"))) {
-						count = pugi::cast<uint16_t>(childNode.attribute("count").value());
+						count = pugi::cast<uint16_t>(attr.value());
 					}
 
 					const auto &it2 = std::ranges::find_if(imbuement.items, [sourceId](const std::pair<uint16_t, uint16_t> &source) -> bool {
@@ -182,14 +182,14 @@ bool Imbuements::loadFromXml(bool /* reloading */) {
 
 					imbuement.items.emplace_back(sourceId, count);
 
-				} else if (strcasecmp(type.c_str(), "description") == 0) {
+				} else if (strcasecmp(key.c_str(), "description") == 0) {
 					std::string description = imbuement.name;
 					if ((attr = childNode.attribute("value"))) {
 						description = attr.as_string();
 					}
 
 					imbuement.description = description;
-				} else if (strcasecmp(type.c_str(), "effect") == 0) {
+				} else if (strcasecmp(key.c_str(), "effect") == 0) {
 					// Effects
 					if (!((attr = childNode.attribute("type")))) {
 						g_logger().warn("Missing effect type for imbuement name: {}", imbuement.name);
@@ -253,7 +253,7 @@ bool Imbuements::loadFromXml(bool /* reloading */) {
 							imbuement.skills[skillId] = bonus;
 							int32_t chance = 100;
 							if ((attr = childNode.attribute("chance"))) {
-								chance = std::min<uint32_t>(10000, pugi::cast<int32_t>(attr.value()));
+								chance = std::min<int32_t>(10000, pugi::cast<int32_t>(attr.value()));
 							}
 
 							imbuement.skills[skillId - 1] = chance;
@@ -305,14 +305,26 @@ bool Imbuements::loadFromXml(bool /* reloading */) {
 							continue;
 						}
 
-						imbuement.speed = pugi::cast<uint32_t>(attr.value());
+						imbuement.speed = pugi::cast<int32_t>(attr.value());
 					} else if (strcasecmp(effecttype.c_str(), "capacity") == 0) {
 						if (!((attr = childNode.attribute("value")))) {
 							g_logger().warn("Missing cap value for imbuement name {}", imbuement.name);
 							continue;
 						}
 
-						imbuement.capacity = pugi::cast<uint32_t>(attr.value());
+						imbuement.capacity = pugi::cast<int32_t>(attr.value());
+					} else if (strcasecmp(effecttype.c_str(), "vibrancy") == 0) {
+						if (!((attr = childNode.attribute("chance")))) {
+							g_logger().warn("Missing chance for imbuement name {}", imbuement.name);
+							continue;
+						}
+
+						uint32_t percent = std::min<uint32_t>(100, pugi::cast<uint32_t>(attr.value()));
+
+						// Placeholder for paralysis chance
+						imbuement.absorbPercent[combatTypeToIndex(COMBAT_UNDEFINEDDAMAGE)] = percent;
+					} else {
+						g_logger().warn("[ParseImbuement::initParseImbuement] - Unknown type: {}", effecttype);
 					}
 				}
 			}
@@ -349,261 +361,13 @@ CategoryImbuement* Imbuements::getCategoryByID(uint16_t id) {
 	return categoryImbuements != categoriesImbuement.end() ? &*categoryImbuements : nullptr;
 }
 
-std::vector<Imbuement*> Imbuements::getImbuements(const std::shared_ptr<Player> &player, const std::shared_ptr<Item> &item) {
-	std::vector<Imbuement*> imbuements;
-
-	for (auto &[key, value] : imbuementMap) {
-		Imbuement* imbuement = &value;
-		if (!imbuement) {
-			continue;
-		}
-
-		// Parse the storages for each imbuement in imbuements.xml and config.lua (enable/disable storage)
-		if (g_configManager().getBoolean(TOGGLE_IMBUEMENT_SHRINE_STORAGE)
-		    && imbuement->getStorage() != 0
-		    && player->getStorageValue(imbuement->getStorage() == -1)
-		    && imbuement->getBaseID() >= 1 && imbuement->getBaseID() <= 3) {
-			continue;
-		}
-
-		// Send only the imbuements registered on item (in items.xml) to the imbuement window
-		const CategoryImbuement* categoryImbuement = getCategoryByID(imbuement->getCategory());
-		if (!item->hasImbuementType(static_cast<ImbuementTypes_t>(categoryImbuement->id), imbuement->getBaseID())) {
-			continue;
-		}
-
-		// If the item is already imbued with an imbuement, remove the imbuement from the next free slot
-		if (item->hasImbuementCategoryId(categoryImbuement->id)) {
-			continue;
-		}
-
-		imbuements.emplace_back(imbuement);
-	}
-
-	return imbuements;
-}
-
-std::vector<Imbuement*> Imbuements::getAllImbuementsIntricateAndPowerful(const std::shared_ptr<Player> &player) {
-	std::vector<Imbuement*> imbuements;
-
-	for (auto &[key, value] : imbuementMap) {
-		Imbuement* imbuement = &value;
-		if (!imbuement) {
-			continue;
-		}
-
-		if (imbuement->getBaseID() < 2) {
-			continue;
-		}
-
-		imbuements.emplace_back(imbuement);
-	}
-
-	return imbuements;
-}
-
-uint16_t Imbuement::getID() const {
-	return id;
-}
-
-uint16_t Imbuement::getBaseID() const {
-	return baseid;
-}
-
-uint32_t Imbuement::getStorage() const {
-	return storage;
-}
-
-uint16_t Imbuement::getScrollId() const {
-	return scrollid;
-}
-
-bool Imbuement::isPremium() const {
-	return premium;
-}
-
-std::string Imbuement::getName() const {
-	return name;
-}
-
-std::string Imbuement::getDescription() const {
-	return description;
-}
-
-std::string Imbuement::getSubGroup() const {
-	return subgroup;
-}
-
-uint16_t Imbuement::getCategory() const {
-	return category;
-}
-
-const std::vector<std::pair<uint16_t, uint16_t>> &Imbuement::getItems() const {
-	return items;
-}
-
-uint16_t Imbuement::getIconID() const {
-	return icon;
-}
-
-ImbuementDecay &ImbuementDecay::getInstance() {
-	return inject<ImbuementDecay>();
-}
-
-void ImbuementDecay::startImbuementDecay(const std::shared_ptr<Item> &item) {
-	if (!item) {
-		g_logger().error("[{}] item is nullptr", __FUNCTION__);
-		return;
-	}
-
-	if (m_itemsToDecay.find(item) != m_itemsToDecay.end()) {
-		return;
-	}
-
-	g_logger().debug("Starting imbuement decay for item {}", item->getName());
-
-	m_itemsToDecay.insert(item);
-
-	if (m_eventId == 0) {
-		m_lastUpdateTime = OTSYS_TIME();
-		m_eventId = g_dispatcher().scheduleEvent(
-			60000, [this] { checkImbuementDecay(); }, "ImbuementDecay::checkImbuementDecay"
-		);
-		g_logger().trace("Scheduled imbuement decay check every 60 seconds.");
-	}
-}
-
-void ImbuementDecay::stopImbuementDecay(const std::shared_ptr<Item> &item) {
-	if (!item) {
-		g_logger().error("[{}] item is nullptr", __FUNCTION__);
-		return;
-	}
-
-	g_logger().debug("Stopping imbuement decay for item {}", item->getName());
-
-	int64_t currentTime = OTSYS_TIME();
-	int64_t elapsedTime = currentTime - m_lastUpdateTime;
-
-	for (uint8_t slotid = 0; slotid < item->getImbuementSlot(); ++slotid) {
-		ImbuementInfo imbuementInfo;
-		if (!item->getImbuementInfo(slotid, &imbuementInfo)) {
-			continue;
-		}
-
-		uint32_t duration = imbuementInfo.duration > elapsedTime / 1000 ? imbuementInfo.duration - static_cast<uint32_t>(elapsedTime / 1000) : 0;
-		item->decayImbuementTime(slotid, imbuementInfo.imbuement->getID(), duration);
-
-		if (duration == 0) {
-			if (auto player = item->getHoldingPlayer()) {
-				player->removeItemImbuementStats(imbuementInfo.imbuement);
-				player->updateImbuementTrackerStats();
-			}
+std::vector<uint16_t> Imbuements::getImbuementsIdsByCategory(uint16_t categoryId) {
+	std::vector<uint16_t> imbuementsIds;
+	for (const auto &[id, imbuement] : imbuementMap) {
+		if (imbuement.category == categoryId) {
+			imbuementsIds.emplace_back(id);
 		}
 	}
 
-	m_itemsToDecay.erase(item);
-
-	if (m_itemsToDecay.empty() && m_eventId != 0) {
-		g_dispatcher().stopEvent(m_eventId);
-		m_eventId = 0;
-		g_logger().trace("No more items to decay. Stopped imbuement decay scheduler.");
-	}
-}
-
-void ImbuementDecay::checkImbuementDecay() {
-	int64_t currentTime = OTSYS_TIME();
-	int64_t elapsedTime = currentTime - m_lastUpdateTime;
-	m_lastUpdateTime = currentTime;
-
-	g_logger().trace("Checking imbuement decay for {} items.", m_itemsToDecay.size());
-
-	std::vector<std::shared_ptr<Item>> itemsToRemove;
-
-	for (const auto &item : m_itemsToDecay) {
-		if (!item) {
-			g_logger().error("[{}] item is nullptr", __FUNCTION__);
-			itemsToRemove.push_back(item);
-			continue;
-		}
-
-		// Get the player holding the item (if any)
-		auto player = item->getHoldingPlayer();
-		if (!player) {
-			g_logger().debug("Item {} is not held by any player. Skipping decay.", item->getName());
-			continue;
-		}
-
-		bool removeItem = true;
-
-		for (uint8_t slotid = 0; slotid < item->getImbuementSlot(); ++slotid) {
-			ImbuementInfo imbuementInfo;
-			if (!item->getImbuementInfo(slotid, &imbuementInfo)) {
-				g_logger().debug("No imbuement info found for slot {} in item {}", slotid, item->getName());
-				continue;
-			}
-
-			// Get the tile the player is currently on
-			const auto &playerTile = player->getTile();
-			// Check if the player is in a protection zone
-			const bool &isInProtectionZone = playerTile && playerTile->hasFlag(TILESTATE_PROTECTIONZONE);
-			// Check if the player is in fight mode
-			bool isInFightMode = player->hasCondition(CONDITION_INFIGHT);
-			bool nonAggressiveFightOnly = g_configManager().getBoolean(TOGGLE_IMBUEMENT_NON_AGGRESSIVE_FIGHT_ONLY);
-
-			// Imbuement from imbuementInfo, this variable reduces code complexity
-			const auto imbuement = imbuementInfo.imbuement;
-			// Get the category of the imbuement
-			const CategoryImbuement* categoryImbuement = g_imbuements().getCategoryByID(imbuement->getCategory());
-			// Parent of the imbued item
-			const auto &parent = item->getParent();
-			const bool &isInBackpack = parent && parent->getContainer();
-			// If the imbuement is aggressive and the player is not in fight mode or is in a protection zone, or the item is in a container, ignore it.
-			if (categoryImbuement && (categoryImbuement->agressive || nonAggressiveFightOnly) && (isInProtectionZone || !isInFightMode || isInBackpack)) {
-				continue;
-			}
-			// If the item is not in the backpack slot and it's not a agressive imbuement, ignore it.
-			if (categoryImbuement && !categoryImbuement->agressive && parent && parent != player) {
-				continue;
-			}
-
-			// If the imbuement's duration is 0, remove its stats and continue to the next slot
-			if (imbuementInfo.duration == 0) {
-				player->removeItemImbuementStats(imbuement);
-				player->updateImbuementTrackerStats();
-				continue;
-			}
-
-			g_logger().debug("Decaying imbuement {} from item {} of player {}", imbuement->getName(), item->getName(), player->getName());
-			// Calculate the new duration of the imbuement, making sure it doesn't go below 0
-			uint32_t duration = imbuementInfo.duration > elapsedTime / 1000 ? imbuementInfo.duration - static_cast<uint32_t>(elapsedTime / 1000) : 0;
-			item->decayImbuementTime(slotid, imbuement->getID(), duration);
-
-			if (duration == 0) {
-				player->removeItemImbuementStats(imbuement);
-				player->updateImbuementTrackerStats();
-			}
-
-			removeItem = false;
-		}
-
-		if (removeItem) {
-			itemsToRemove.push_back(item);
-		}
-	}
-
-	// Remove items whose imbuements have expired
-	for (const auto &item : itemsToRemove) {
-		m_itemsToDecay.erase(item);
-	}
-
-	// Reschedule the event if there are still items
-	if (!m_itemsToDecay.empty()) {
-		m_eventId = g_dispatcher().scheduleEvent(
-			60000, [this] { checkImbuementDecay(); }, "ImbuementDecay::checkImbuementDecay"
-		);
-		g_logger().trace("Re-scheduled imbuement decay check.");
-	} else {
-		m_eventId = 0;
-		g_logger().trace("No more items to decay. Stopped imbuement decay scheduler.");
-	}
+	return imbuementsIds;
 }
