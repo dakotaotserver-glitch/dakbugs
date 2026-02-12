@@ -5773,7 +5773,53 @@ void Player::updateItemsLight(bool internal /*=false*/) {
 
 void Player::onAddCondition(ConditionType_t type) {
 	Creature::onAddCondition(type);
+if (type == CONDITION_PARALYZE) {
 
+        //  1. Apenas PvP
+        Condition* condition = getCondition(CONDITION_PARALYZE);
+        if (!condition || !condition->getAttacker()) {
+            sendIcons();
+            return;
+        }
+
+        Player* attacker = condition->getAttacker()->getPlayer();
+        if (!attacker) {
+            // Não é PvP → não ativa Vibrancy
+            sendIcons();
+            return;
+        }
+
+        //  2. Vibrancy só pode estar nas boots
+        Item* boots = inventory[CONST_SLOT_FEET];
+        if (!boots) {
+            sendIcons();
+            return;
+        }
+
+        uint32_t highestChance = 0;
+
+        for (uint8_t slot = 0; slot < boots->getImbuementSlot(); ++slot) {
+            ImbuementInfo info;
+            if (!boots->getImbuementInfo(slot, &info)) {
+                continue;
+            }
+
+            if (info.imbuement && info.imbuement->vibrancyChance > highestChance) {
+                highestChance = info.imbuement->vibrancyChance;
+            }
+        }
+
+        if (highestChance > 0) {
+
+            // 3. Chance oficial (base 100)
+            uint32_t roll = uniform_random(1, 100);
+
+            if (roll <= highestChance) {
+                removeCondition(CONDITION_PARALYZE);
+                g_game().addMagicEffect(getPosition(), CONST_ME_MAGIC_BLUE);
+        }
+    }
+}
 	if (type == CONDITION_OUTFIT && isMounted()) {
 		dismount();
 		wasMounted = true;
