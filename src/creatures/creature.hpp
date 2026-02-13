@@ -1,18 +1,19 @@
 ////////////////////////////////////////////////////////////////////////
-// Crystal Server - an opensource roleplaying game
+// OpenTibia - An opensource roleplaying game
 ////////////////////////////////////////////////////////////////////////
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+// General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -94,25 +95,25 @@ public:
 	std::shared_ptr<Creature> getCreature() final {
 		return static_self_cast<Creature>();
 	}
-	std::shared_ptr<const Creature> getCreature() const final {
+	std::shared_ptr<Creature> getCreature() const final {
 		return static_self_cast<Creature>();
 	}
 	std::shared_ptr<Player> getPlayer() override {
 		return nullptr;
 	}
-	virtual std::shared_ptr<const Player> getPlayer() const {
+	virtual std::shared_ptr<Player> getPlayer() const {
 		return nullptr;
 	}
 	virtual std::shared_ptr<Npc> getNpc() {
 		return nullptr;
 	}
-	virtual std::shared_ptr<const Npc> getNpc() const {
+	virtual std::shared_ptr<Npc> getNpc() const {
 		return nullptr;
 	}
 	virtual std::shared_ptr<Monster> getMonster() {
 		return nullptr;
 	}
-	virtual std::shared_ptr<const Monster> getMonster() const {
+	virtual std::shared_ptr<Monster> getMonster() const {
 		return nullptr;
 	}
 
@@ -366,11 +367,8 @@ public:
 
 	/**
 	 * @brief Mitigates damage inflicted on a creature.
-	 *
 	 * Used to mitigate the damage inflicted on a creature during combat.
-	 *
 	 * @note If the server is running in dev mode, this function will also log details about the mitigation process.
-	 *
 	 * @param creature Reference to the creature that is receiving the damage.
 	 * @param combatType Type of combat that is inflicting the damage. Note that mana drain and life drain are not mitigated.
 	 * @param blockType Reference to the block type, which may be modified to BLOCK_ARMOR if the damage is reduced to 0.
@@ -427,8 +425,8 @@ public:
 		return SPEECHBUBBLE_NONE;
 	}
 
-	bool addCondition(const std::shared_ptr<Condition> &condition, bool attackerPlayer = false);
-	bool addCombatCondition(const std::shared_ptr<Condition> &condition, bool attackerPlayer = false);
+	virtual bool addCondition(const std::shared_ptr<Condition> &condition, bool force = false);
+	bool addCombatCondition(const std::shared_ptr<Condition> &condition, bool force = false);
 	void removeCondition(ConditionType_t conditionType, ConditionId_t conditionId, bool force = false);
 	void removeCondition(ConditionType_t type);
 	void removeCondition(const std::shared_ptr<Condition> &condition);
@@ -448,7 +446,7 @@ public:
 	}
 	virtual bool isSuppress([[maybe_unused]] ConditionType_t type, [[maybe_unused]] bool attackerPlayer) const {
 		return false;
-	};
+	}
 
 	virtual bool isAttackable() const {
 		return true;
@@ -479,439 +477,514 @@ public:
 	virtual void onEndCondition(ConditionType_t type);
 	void onTickCondition(ConditionType_t type, bool &bRemove);
 	virtual void onCombatRemoveCondition(const std::shared_ptr<Condition> &condition);
-	virtual void onAttackedCreature(const std::shared_ptr<Creature> &) { }
+	virtual void onAttackedCreature(const std::shared_ptr<Creature> &)
+	/* empty */
+	;
 	virtual void onAttacked();
 	virtual void onAttackedCreatureDrainHealth(const std::shared_ptr<Creature> &target, int32_t points);
 	virtual void onTargetCreatureGainHealth(const std::shared_ptr<Creature> &, int32_t) { }
-	void onAttackedCreatureKilled(const std::shared_ptr<Creature> &target);
-	/**
-	 * @deprecated -- This is here to trigger the deprecated onKill events in lua
-	 */
-	bool deprecatedOnKilledCreature(const std::shared_ptr<Creature> &target, bool lastHit);
-	virtual bool onKilledPlayer([[maybe_unused]] const std::shared_ptr<Player> &target, [[maybe_unused]] bool lastHit) {
-		return false;
-	};
-	virtual bool onKilledMonster([[maybe_unused]] const std::shared_ptr<Monster> &target) {
-		return false;
-	};
+	virtual bool onKilledCreature(const std::shared_ptr<Creature> &target, bool lastHit = true);
 	virtual void onGainExperience(uint64_t gainExp, const std::shared_ptr<Creature> &target);
-	virtual void onAttackedCreatureBlockHit(const BlockType_t &) { }
-	virtual void onBlockHit() { }
-	virtual void onTakeDamage(const std::shared_ptr<Creature> &, int32_t) { }
+	virtual void onGainSharedExperience(uint64_t gainExp, const std::shared_ptr<Creature> &target);
+	virtual void onAttackedCreatureBlockHit(BlockType_t blockType);
+	virtual void onBlockHit();
 	virtual void onChangeZone(ZoneType_t zone);
 	virtual void onAttackedCreatureChangeZone(ZoneType_t zone);
 	virtual void onIdleStatus();
 
+	virtual void getCreatureLight(LightInfo &light) const;
+	void setNormalCreatureLight();
+	virtual void setCreatureLight(LightInfo lightInfo);
 	virtual LightInfo getCreatureLight() const;
-	virtual void setNormalCreatureLight();
-	void setCreatureLight(LightInfo lightInfo);
 
 	virtual void onThink(uint32_t interval);
-	void onAttacking(uint32_t interval);
-	virtual void onCreatureWalk();
-	virtual bool getNextStep(Direction &dir, uint32_t &flags);
-
-	virtual void turnToCreature(const std::shared_ptr<Creature> &creature);
-
-	void onAddTileItem(const std::shared_ptr<Tile> & /*tile*/, const Position & /*pos*/) { }
-	virtual void onUpdateTileItem(const std::shared_ptr<Tile> &tile, const Position &pos, const std::shared_ptr<Item> &oldItem, const ItemType &oldType, const std::shared_ptr<Item> &newItem, const ItemType &newType) { }
-	virtual void onRemoveTileItem(const std::shared_ptr<Tile> &tile, const Position &pos, const ItemType &iType, const std::shared_ptr<Item> &item) { }
-
+	virtual void onAttacking(uint32_t interval);
+	virtual void onWalking() { }
 	virtual void onCreatureAppear(const std::shared_ptr<Creature> &creature, bool isLogin);
 	virtual void onRemoveCreature(const std::shared_ptr<Creature> &creature, bool isLogout);
+	virtual void onCreatureDisappear(const std::shared_ptr<Creature> &creature, bool isLogout);
+	virtual void onCreatureSay(const std::shared_ptr<Creature> &creature, SpeakClasses type, const std::string &text);
 
-	/**
-	 * @brief Check if the summon can move/spawn and if the familiar can teleport to the master
-	 *
-	 * @param newPos New position to teleport
-	 * @param teleportSummon Can teleport normal summon? Default value is "false"
-	 * @return true
-	 * @return false
-	 */
-	void checkSummonMove(const Position &newPos, bool teleportSummon = false);
-	virtual void onCreatureMove(const std::shared_ptr<Creature> &creature, const std::shared_ptr<Tile> &newTile, const Position &newPos, const std::shared_ptr<Tile> &oldTile, const Position &oldPos, bool teleport);
+	virtual void onPlacedCreature();
+	virtual void onRemovedCreature();
 
-	virtual void onAttackedCreatureDisappear(bool) { }
-	virtual void onFollowCreatureDisappear(bool) { }
-
-	virtual void onCreatureSay(const std::shared_ptr<Creature> &, SpeakClasses, const std::string &) { }
-
-	virtual void onPlacedCreature() { }
-
-	virtual bool getCombatValues(int32_t &, int32_t &) {
+	virtual bool getCombatValues(int32_t &min, int32_t &max) {
+		min = 0;
+		max = 0;
 		return false;
 	}
 
-	size_t getSummonCount() const {
+	size_t getMessageBuffer() const {
+		return messageBuffer;
+	}
+	void decreaseMessageBuffer() {
+		messageBuffer--;
+	}
+
+	virtual void setParent(const std::shared_ptr<Cylinder> &cylinder) override {
+		tile = static_self_cast<Tile>(cylinder);
+		Creature::setParent(cylinder);
+	}
+
+	std::shared_ptr<Tile> getTile();
+	const std::shared_ptr<Tile> getTile() const;
+	bool isRemoved() const;
+
+	Position getPosition() const final;
+
+	template <typename Callable, typename... Args>
+	void callCreatureSayEvent(CreatureEventType_t type, Callable &&cb, Args &&...args) {
+		for (const auto &creatureEvent : eventsList) {
+			if (creatureEvent->getEventType() == type) {
+				creatureEvent->executeEvent(static_self_cast<Creature>(), std::forward<Args>(args)...);
+			}
+		}
+	}
+
+	size_t getSummonsSize() const {
 		return m_summons.size();
 	}
-
-	/**
-	 * @brief Check if the "summons" list is empty
-	 *
-	 * @return true = not empty
-	 * @return false = empty
-	 */
-	bool hasSummons() const {
-		if (!m_summons.empty()) {
-			return true;
-		}
-		return false;
+	void setDropLoot(bool _lootDrop) {
+		lootDrop = _lootDrop;
 	}
-
-	void setDropLoot(bool newLootDrop) {
-		this->lootDrop = newLootDrop;
+	void setLootContainers(bool _lootContainers) {
+		lootContainers = _lootContainers;
 	}
-	void setSkillLoss(bool newSkillLoss) {
-		this->skillLoss = newSkillLoss;
+	void setSkillLoss(bool _skillLoss) {
+		skillLoss = _skillLoss;
 	}
-	void setUseDefense(bool useDefense) {
-		canUseDefense = useDefense;
+	void setGuildWar(bool _guildWar) {
+		guildWar = _guildWar;
 	}
 
 	// creature script events
-	bool registerCreatureEvent(const std::string &name);
-	bool unregisterCreatureEvent(const std::string &name);
+	bool registerCreatureEvent(uint32_t eventId);
+	bool unregisterCreatureEvent(uint32_t eventId);
 
-	std::shared_ptr<Cylinder> getParent() final;
+	void registerCreatureEvent(CreatureEventType_t type);
+	bool unregisterCreatureEvent(CreatureEventType_t type);
 
-	void setParent(std::weak_ptr<Cylinder> cylinder) final;
+	CreatureEventList getCreatureEvents(CreatureEventType_t type);
 
-	const Position &getPosition() final {
-		return position;
+	void setSkull(Skulls_t newSkull) {
+		skull = newSkull;
+	}
+	Skulls_t getSkull() const {
+		return skull;
 	}
 
-	std::shared_ptr<Tile> getTile() final {
-		return m_tile.lock();
+	void setShield(PartyShields_t newPartyShield) {
+		partyShield = newPartyShield;
+	}
+	PartyShields_t getPartyShield() const {
+		return partyShield;
 	}
 
-	std::shared_ptr<Tile> getTile() const final {
-		return m_tile.lock();
+	void setEmblem(GuildEmblems_t newGuildEmblem) {
+		guildEmblem = newGuildEmblem;
+	}
+	GuildEmblems_t getGuildEmblem() const {
+		return guildEmblem;
 	}
 
-	const Position &getLastPosition() const {
-		return lastPosition;
-	}
-	void setLastPosition(Position newLastPos) {
-		lastPosition = newLastPos;
-	}
-
-	static bool canSee(const Position &myPos, const Position &pos, int32_t viewRangeX, int32_t viewRangeY);
-
-	double getDamageRatio(const std::shared_ptr<Creature> &attacker) const;
-
-	bool getPathTo(const Position &targetPos, std::vector<Direction> &dirList, const FindPathParams &fpp);
-	bool getPathTo(const Position &targetPos, std::vector<Direction> &dirList, int32_t minTargetDist, int32_t maxTargetDist, bool fullPathSearch = true, bool clearSight = true, int32_t maxSearchDist = 7);
-
-	struct CountBlock_t {
-		int32_t total;
-		int64_t ticks;
-	};
-	using CountMap = std::map<uint32_t, CountBlock_t>;
-	CountMap getDamageMap() const {
-		return damageMap;
-	}
-	void setWheelOfDestinyDrainBodyDebuff(uint8_t value) {
-		wheelOfDestinyDrainBodyDebuff = value;
-	}
-	uint8_t getWheelOfDestinyDrainBodyDebuff() const {
-		return wheelOfDestinyDrainBodyDebuff;
+	bool hasAttacked(const std::shared_ptr<Player> &attacked) const;
+	bool setAttackedCreature(const std::shared_ptr<Creature> &creature);
+	std::shared_ptr<Creature> getAttackedCreature() {
+		return attackedCreature;
 	}
 
-	/**
-	 * @brief Retrieves the reflection percentage for a given combat type.
-	 *
-	 * @param combatType The combat type.
-	 * @param useCharges Indicates whether charges should be considered.
-	 * @return The reflection percentage for the specified combat type.
-	 */
-	virtual double_t getReflectPercent(CombatType_t combatType, bool useCharges = false) const;
+	uint64_t getLostExperience() const;
 
-	/**
-	 * @brief Retrieves the flat reflection value for a given combat type.
-	 *
-	 * @param combatType The combat type.
-	 * @param useCharges Indicates whether charges should be considered.
-	 * @return The flat reflection value for the specified combat type.
-	 */
-	virtual int32_t getReflectFlat(CombatType_t combatType, bool useCharges = false) const;
+	void dropLoot(const std::shared_ptr<Container> &corpse);
+	uint16_t getLookCorpse() const;
+	void getPathSearchParams(const std::shared_ptr<Creature> &creature, FindPathParams &fpp) const;
 
-	/**
-	 * @brief Sets the reflection percentage for a given combat type.
-	 *
-	 * @param combatType The combat type.
-	 * @param value The reflection percentage value.
-	 */
-	virtual void setReflectPercent(CombatType_t combatType, int32_t value);
-
-	/**
-	 * @brief Sets the flat reflection value for a given combat type.
-	 *
-	 * @param combatType The combat type.
-	 * @param value The flat reflection value.
-	 */
-	virtual void setReflectFlat(CombatType_t combatType, int32_t value);
-
-	/**
-	 * @brief Retrieves the flat absorption value for a given combat type.
-	 *
-	 * @param combat The combat type.
-	 * @return The flat absorption value for the specified combat type.
-	 */
-	int32_t getAbsorbFlat(CombatType_t combat) const;
-
-	/**
-	 * @brief Sets the flat absorption value for a given combat type.
-	 *
-	 * @param combat The combat type.
-	 * @param value The flat absorption value.
-	 */
-	void setAbsorbFlat(CombatType_t combat, int32_t value);
-
-	/**
-	 * @brief Retrieves the absorption percentage for a given combat type.
-	 *
-	 * @param combat The combat type.
-	 * @return The absorption percentage for the specified combat type.
-	 */
-	int32_t getAbsorbPercent(CombatType_t combat) const;
-
-	/**
-	 * @brief Sets the absorption percentage for a given combat type.
-	 *
-	 * @param combat The combat type.
-	 * @param value The absorption percentage value.
-	 */
-	void setAbsorbPercent(CombatType_t combat, int32_t value);
-
-	/**
-	 * @brief Retrieves the increase percentage for a given combat type.
-	 *
-	 * @param combat The combat type.
-	 * @return The increase percentage for the specified combat type.
-	 */
-	int32_t getIncreasePercent(CombatType_t combat) const;
-
-	/**
-	 * @brief Sets the increase percentage for a given combat type.
-	 *
-	 * @param combat The combat type.
-	 * @param value The increase percentage value.
-	 */
-	void setIncreasePercent(CombatType_t combat, int32_t value);
-
-	/**
-	 * @brief Retrieves the charm percent modifier for the creature.
-	 *
-	 * @return The charm percent modifier for the creature.
-	 */
-	int8_t getCharmChanceModifier() const {
-		return charmChanceModifier;
-	}
-
-	/**
-	 * @brief Sets the charm percent modifier for the creature.
-	 *
-	 * @param value The charm percent modifier value.
-	 */
-	void setCharmChanceModifier(int8_t value) {
-		charmChanceModifier = value;
-	}
-
-	std::string getShader() const {
-		return shader;
-	}
-	void setShader(const std::string_view shaderName) {
-		shader = shaderName;
-	}
-	void attachEffectById(uint16_t id);
-	void detachEffectById(uint16_t id);
-	std::vector<uint16_t> getAttachedEffectList() const {
-		return attachedEffectList;
-	}
-
-	void setCombatDamage(const CombatDamage &damage);
-	CombatDamage getCombatDamage() const;
-
-protected:
-	enum FlagAsyncClass_t : uint8_t {
-		AsyncTaskRunning = 1 << 0,
-		UpdateTargetList = 1 << 1,
-		UpdateIdleStatus = 1 << 2,
-		Pathfinder = 1 << 3
-	};
-
-	virtual bool isDead() const {
-		return false;
-	}
-
-	Position position;
-
-	CountMap damageMap;
-
-	std::vector<std::shared_ptr<Creature>> m_summons;
-	CreatureEventList eventsList;
-	ConditionList conditions;
-
-	std::vector<Direction> listWalkDir;
-
-	std::weak_ptr<Tile> m_tile;
-	std::weak_ptr<Creature> m_attackedCreature;
-	std::weak_ptr<Creature> m_master;
-	std::weak_ptr<Creature> m_followCreature;
-
-	/**
-	 * We need to persist if this creature is summon or not because when we
-	 * increment the bestiary count, the master might be gone before we can
-	 * check if this summon has a master and mistakenly count it kill.
-	 *
-	 * @see BestiaryOnKill
-	 * @see Monster::death()
-	 */
-	bool summoned = false;
-
-	uint64_t lastStep = 0;
-	uint32_t id = 0;
-	uint32_t scriptEventsBitField = 0;
-	uint32_t eventWalk = 0;
-	uint32_t walkUpdateTicks = 0;
-	uint32_t lastHitCreatureId = 0;
-	uint32_t blockCount = 0;
-	uint32_t blockTicks = 0;
-	uint32_t lastStepCost = 1;
-	uint16_t baseSpeed = 110;
-	uint32_t mana = 0;
-	int32_t varSpeed = 0;
-	int32_t health = 1000;
-	int32_t healthMax = 1000;
-
-	uint32_t manaShield = 0;
-	uint32_t maxManaShield = 0;
-	int32_t varBuffs[BUFF_LAST + 1] = { 100, 100, 100 };
-
-	std::array<int32_t, COMBAT_COUNT> reflectPercent = { 0 };
-	std::array<int32_t, COMBAT_COUNT> reflectFlat = { 0 };
-
-	std::array<int32_t, COMBAT_COUNT> absorbPercent = { 0 };
-	std::array<int32_t, COMBAT_COUNT> increasePercent = { 0 };
-	std::array<int32_t, COMBAT_COUNT> absorbFlat = { 0 };
-
-	Outfit_t currentOutfit;
-	Outfit_t defaultOutfit;
-	uint16_t currentMount;
-
-	Position lastPosition;
-	LightInfo internalLight;
-
-	Direction direction = DIRECTION_SOUTH;
-	Skulls_t skull = SKULL_NONE;
-
-	std::atomic_bool creatureCheck = false;
-	std::atomic_bool inCheckCreaturesVector = false;
-
-	bool isInternalRemoved = false;
-	bool isUpdatingPath = false;
-	bool skillLoss = true;
-	bool lootDrop = true;
-	bool cancelNextWalk = false;
-	bool forceUpdateFollowPath = false;
-	bool hiddenHealth = false;
-	bool floorChange = false;
-	bool canUseDefense = true;
-	bool moveLocked = false;
-	bool directionLocked = false;
-	bool hasFollowPath = false;
-	bool checkingWalkCreature = false;
-	int8_t charmChanceModifier = 0;
-
-	uint8_t wheelOfDestinyDrainBodyDebuff = 0;
-
-	// use map here instead of phmap to keep the keys in a predictable order
-	std::map<std::string, CreatureIcon> creatureIcons = {};
-
-	// creature script events
-	bool hasEventRegistered(CreatureEventType_t event) const;
-	CreatureEventList getCreatureEvents(CreatureEventType_t type) const;
-
-	void onCreatureDisappear(const std::shared_ptr<Creature> &creature, bool isLogout);
-	virtual void doAttacking(uint32_t) { }
-	virtual bool hasExtraSwing() {
-		return false;
-	}
-
-	virtual uint64_t getLostExperience() const {
-		return 0;
-	}
-	virtual void dropLoot(const std::shared_ptr<Container> &, const std::shared_ptr<Creature> &) { }
-	virtual uint16_t getLookCorpse() const {
-		return 0;
-	}
-	virtual void getPathSearchParams(const std::shared_ptr<Creature> &, FindPathParams &fpp);
-	virtual void death(const std::shared_ptr<Creature> &) { }
-	virtual bool dropCorpse(const std::shared_ptr<Creature> &lastHitCreature, const std::shared_ptr<Creature> &mostDamageCreature, bool lastHitUnjustified, bool mostDamageUnjustified);
-	virtual std::shared_ptr<Item> getCorpse(const std::shared_ptr<Creature> &lastHitCreature, const std::shared_ptr<Creature> &mostDamageCreature);
+	void attachEvent(std::shared_ptr<Task> event);
+	bool detachEvent(std::shared_ptr<Task> event);
+	void onExpireEvent(std::shared_ptr<Task> event);
 
 	friend class Game;
 	friend class Map;
-	friend class CreatureFunctions;
+	friend class LuaScriptInterface;
 
-	void addAsyncTask(std::function<void()> &&fnc) {
-		asyncTasks.emplace_back(std::move(fnc));
-		sendAsyncTasks();
+protected:
+	virtual bool useCacheMap() const {
+		return false;
 	}
 
-	bool hasAsyncTaskFlag(FlagAsyncClass_t prop) const {
-		return (m_flagAsyncTask & prop);
+	std::map<uint32_t, std::shared_ptr<ProtocolGame>> knownPlayerSet;
+
+	int32_t health = 1000;
+	int32_t healthMax = 1000;
+	uint32_t level = 1;
+	uint32_t magLevel = 0;
+	uint32_t mana = 0;
+	uint32_t manaMax = 0;
+	uint32_t manaShield = 0;
+	uint32_t maxManaShield = 0;
+	uint32_t soul = 0;
+	uint32_t soulMax = 100;
+	uint32_t levelPercent = 0;
+	uint32_t magLevelPercent = 0;
+	uint8_t experienceBonus = 0;
+
+	Position masterPos;
+
+	int64_t lastWalkthroughAttempt = 0;
+	Position lastWalkthroughPosition;
+
+	double skills[SKILL_LAST + 1][3] = {};
+	double_t townWarDefenseModifier = 1.0;
+
+	int32_t varSkills[SKILL_LAST + 1] = {};
+	int32_t varStats[STAT_LAST + 1] = {};
+	int32_t varSpecialSkills[SPECIALSKILL_LAST + 1] = {};
+
+	bool lootDrop = true;
+	bool lootContainers = true;
+	bool skillLoss = true;
+	bool guildWar = false;
+
+	struct Familiar {
+		std::string name;
+		uint16_t looktype;
+
+		bool operator<(const Familiar &rhs) const {
+			return name < rhs.name;
+		}
+	};
+
+	std::set<uint32_t> registered_events;
+	std::vector<Familiar> unlockedFamiliars;
+
+	std::vector<std::shared_ptr<Condition>> getMuteConditions() const;
+
+	virtual void onDie();
+	virtual void onAdvance(EventInfo &event);
+
+	uint32_t id = 0;
+	bool summoned = false;
+	bool isInternalRemoved = false;
+	bool moveLocked = false;
+	bool directionLocked = false;
+	bool hiddenHealth = false;
+	bool localMapCacheUpToDate = false;
+	Skulls_t skull = SKULL_NONE;
+	PartyShields_t partyShield = SHIELD_NONE;
+	GuildEmblems_t guildEmblem = GUILDEMBLEM_NONE;
+
+	std::shared_ptr<Creature> attackedCreature;
+	std::shared_ptr<Creature> followCreature;
+
+	uint32_t eventWalk = 0;
+	uint32_t walkTaskEvent = 0;
+	uint32_t actionTaskEvent = 0;
+	uint32_t quickLootFallbackToMainContainerEvent = 0;
+	uint32_t lastAttack = 0;
+	uint32_t lastHit = 0;
+	uint32_t blockCount = 0;
+	uint32_t blockTicks = 0;
+	uint32_t lastCloseTime = 0;
+	uint32_t messageBuffer = 0;
+	uint32_t nextStepId = 0;
+
+	CombatType_t lastDamageSource = COMBAT_NONE;
+	uint32_t lastHitCreatureId = 0;
+	uint32_t blockHitCreatureId = 0;
+	uint64_t experience = 0;
+
+	Direction direction = DIRECTION_SOUTH;
+	Outfit_t currentOutfit = {};
+	Outfit_t defaultOutfit = {};
+
+	Position postTeleportPos;
+	LightInfo creatureLight;
+
+	std::shared_ptr<Task> walkTask;
+
+	std::weak_ptr<Creature> m_master;
+	std::vector<std::weak_ptr<Creature>> m_summons;
+
+	std::unordered_map<std::string, CreatureIcon> creatureIcons;
+	bool iconChangedFlag = false;
+
+	std::array<int32_t, BUFF_LAST + 1> varBuffs = {};
+
+	std::vector<std::shared_ptr<Condition>> conditions;
+
+	std::shared_ptr<Tile> tile;
+
+	std::vector<std::shared_ptr<CreatureEvent>> eventsList;
+	std::vector<std::weak_ptr<Creature>> corpseOwnerList;
+
+	std::map<uint32_t, int64_t> damageMap;
+
+	std::list<std::shared_ptr<Task>> eventList;
+	mutable std::mutex eventLock;
+
+	std::mutex quickLootMutex;
+
+	uint16_t baseSpeed = 220;
+	int32_t varSpeed = 0;
+
+	std::array<uint64_t, CONDITION_LAST + 1> conditionLastExecute = {};
+	std::array<int32_t, CONDITION_LAST + 1> conditionSuppressions = {};
+	std::array<int32_t, CONDITION_LAST + 1> conditionCounts = {};
+
+	uint64_t yellTicks = 0;
+	uint32_t yellSpeedTicks = 0;
+	uint32_t messageTicks = 0;
+	int64_t lastGossip = 0;
+	uint32_t premiumDays = 0;
+
+	double inventoryWeight = 0.0;
+
+	uint64_t lastPong = 0;
+	uint64_t lastPing = 0;
+
+	int64_t lastLogout = 0;
+	int64_t staminaMs = 0;
+	int8_t bedPartnerDir = -1;
+	uint64_t lastDepotId = -1;
+	uint64_t lastMail = 0;
+	uint16_t lastMailSender = 0;
+	time_t lastLogin = 0;
+	time_t lastLogout = 0;
+
+	std::weak_ptr<Creature> m_followCreature;
+	std::weak_ptr<Creature> m_attackedCreature;
+
+	// variables
+	std::string name;
+	std::string nameDescription;
+	std::string specialDescription;
+
+	std::string guildNick;
+
+	Rank_t guildRank = RANK_NONE;
+
+	uint64_t guildContribution = 0;
+	uint8_t guildLevel = 0;
+
+	bool localMapCache[MAP_MAX_LAYERS][MAP_MAX_CLIENT_VIEWPORT_X * 2 + 1][MAP_MAX_CLIENT_VIEWPORT_Y * 2 + 1] = {};
+	bool floors[8] = {};
+
+	GuildWarVector guildWarVector;
+
+	std::map<uint8_t, uint64_t> items;
+
+	uint32_t chaseMode = CHASEMODE_STANDSTILL;
+	uint32_t fightMode = FIGHTMODE_ATTACK;
+	uint32_t secureMode = SECUREMODE_SAFETY_ON;
+
+	// account variables
+	std::shared_ptr<Account> account;
+	AccountType_t accountType = ACCOUNT_TYPE_NORMAL;
+	OperatingSystem_t operatingSystem = CLIENTOS_NONE;
+	uint16_t protocolVersion = 0;
+
+	// main variables
+	void updateMapCache();
+	int64_t getStepDelay(Direction dir) const;
+	int64_t getStepDelay() const;
+
+	uint32_t getMaxViewportX() const {
+		return maxViewportX;
+	}
+	uint32_t getMaxViewportY() const {
+		return maxViewportY;
+	}
+	uint32_t getLastStepCost() const {
+		return lastStepCost;
 	}
 
-	void setAsyncTaskFlag(FlagAsyncClass_t taskFlag, bool v) {
-		if (v) {
-			m_flagAsyncTask |= taskFlag;
-			sendAsyncTasks();
-		} else {
-			m_flagAsyncTask &= ~taskFlag;
+	uint32_t getAccountID() const {
+		return account ? account->getID() : 0;
+	}
+
+	std::string getAccountName() const {
+		return account ? account->getName() : std::string();
+	}
+
+	AccountErrors_t getAccountErrors() const {
+		return account ? account->getErrors() : ACCOUNT_ERROR_NO_ERROR;
+	}
+
+	AccountType_t getAccountType() const {
+		return accountType;
+	}
+
+	uint32_t getLevel() const {
+		return level;
+	}
+
+	uint8_t getLevelPercent() const {
+		return levelPercent;
+	}
+
+	uint32_t getMagicLevel() const {
+		return magLevel + varStats[STAT_MAGICPOINTS];
+	}
+	uint32_t getBaseMagicLevel() const {
+		return magLevel;
+	}
+	uint8_t getMagicLevelPercent() const {
+		return magLevelPercent;
+	}
+
+	uint8_t getSoul() const {
+		return soul;
+	}
+
+	bool isAccessPlayer() const {
+		return group->access;
+	}
+	bool isPremium() const;
+
+	uint16_t getHelpers() const;
+
+	const std::vector<std::shared_ptr<Party>> &getParties() const {
+		return parties;
+	}
+	std::vector<std::shared_ptr<Party>> &getParties() {
+		return parties;
+	}
+	bool canOpenCorpse(uint32_t ownerId) const;
+
+	uint16_t getBaseSpeed() const {
+		return baseSpeed + varSpeed;
+	}
+
+	bool isSuppressedEvent(CreatureEventType_t eventType);
+
+	bool isLoginEventSuppressed();
+
+	bool isUpdateEventSuppressed();
+
+	bool isRemoveEventSuppressed();
+
+	bool isLoadEventSuppressed();
+
+	bool isThinkEventSuppressed();
+
+	void updateBaseSpeed() {
+		if (!hasFlag(PlayerFlag_SetMaxSpeed)) {
+			baseSpeed = vocation->getBaseSpeed() + (2 * (level - 1));
 		}
 	}
 
-	virtual void onExecuteAsyncTasks() {};
+	void updateInventoryWeight();
 
-	// This method maintains safety in asynchronous calls, avoiding competition between threads.
-	void safeCall(std::function<void(void)> &&action) const;
+	void setVarSkill(skills_t skill, int32_t modifier);
+	void setVarStats(stats_t stat, int32_t modifier);
+	void addVarStats(stats_t stat, int32_t modifier);
+	int32_t getVarStats(stats_t stat) const;
+	int getDefaultStats(stats_t stat) const;
+
+	void setVarSpecialSkill(SpecialSkills_t specskill, int32_t modifier);
+	int32_t getVarSpecialSkill(SpecialSkills_t specskill) const;
+
+	uint32_t getStepTicks() const {
+		return stepTicks;
+	}
+
+	void setStepTicks(uint32_t ticks) {
+		stepTicks = ticks;
+	}
+
+	uint32_t getStepDuration() const {
+		if (level == 1) {
+			return stepDuration * lastStepCost;
+		}
+		return stepDuration;
+	}
+
+	uint32_t getFollowSpeed() const {
+		return getSpeed();
+	}
+
+	int32_t getStepSpeed() const override {
+		return getSpeed();
+	}
+
+	void updateMapCache() const;
+
+	bool openCorpse(const std::shared_ptr<Item> &corpse, uint32_t flags);
+
+	int32_t getPercentSkill(skills_t skill) const {
+		return skills[skill][SKILL_PERCENT];
+	}
+
+	void notifyEvent(const std::shared_ptr<Event> &event) {
+		// Notify event for monster and npc for potions
+	}
+
+	// helpers
+	void addDamagePoints(const std::shared_ptr<DamageMap> &damageMap);
+	void sendMessage(MessageClasses mclass, const std::string &message) const;
+
+	void clearPlayer() {
+		player = nullptr;
+	}
 
 private:
-	bool canFollowMaster() const;
-	bool isLostSummon();
-	void sendAsyncTasks();
-	void handleLostSummon(bool teleportSummons);
+	std::vector<std::shared_ptr<Party>> parties;
+	std::shared_ptr<Vocation> vocation;
 
-	std::vector<std::function<void()>> asyncTasks;
+	std::shared_ptr<Player> player;
 
-	struct {
-		uint16_t groundSpeed { 0 };
-		uint16_t calculatedStepSpeed { 1 };
-		uint16_t duration { 0 };
+	uint32_t lastAttack = 0;
+	uint32_t staminaMinutes = 0;
 
-		bool needRecache() const {
-			return duration == 0;
-		}
-		void recache() {
-			duration = 0;
-		}
-	} walk;
+	std::string name;
+	std::string nameDescription;
 
-	void updateCalculatedStepSpeed() {
-		const auto stepSpeed = getStepSpeed();
-		walk.calculatedStepSpeed = 1;
-		if (stepSpeed > -Creature::speedB) {
-			const auto formula = std::floor((Creature::speedA * log(stepSpeed + Creature::speedB) + Creature::speedC) + .5);
-			walk.calculatedStepSpeed = static_cast<uint16_t>(std::max(formula, 1.));
-		}
+	uint8_t soulMax = 0;
 
-		walk.recache();
+	uint32_t windowTextId = 0;
+	uint32_t writeItem = 0;
+	uint32_t maxWriteLen = 0;
+
+	HouseList ownedHouses;
+
+	uint32_t maxViewportX = MAP_MAX_CLIENT_VIEWPORT_X;
+	uint32_t maxViewportY = MAP_MAX_CLIENT_VIEWPORT_Y;
+	uint32_t lastStepCost = 1;
+	uint32_t messageBuffer = 0;
+	uint32_t stepTicks = 0;
+	uint32_t stepDuration = 0;
+
+	double inventoryWeight = 0;
+	double capacity = 400.00;
+
+	uint32_t damageImmunities = 0;
+	uint32_t conditionImmunities = 0;
+	uint32_t conditionSuppressions = 0;
+
+	uint32_t nextStepEvent = 0;
+	uint32_t actionTaskEvent = 0;
+	uint32_t walkUpdateEvent = 0;
+
+	time_t lastFailedFollow = 0;
+
+	time_t skullTicks = 0;
+	uint32_t lastSkullTime = 0;
+
+	ItemMap inventory;
+
+	bool pzLocked = false;
+	bool isConnecting = false;
+
+	std::weak_ptr<Container> lootContainer;
+	std::weak_ptr<Container> mailBox;
+
+	void updateItemsLight(bool internal = false);
+	virtual int32_t getStepSpeed() const {
+		return getSpeed();
 	}
+	void updateBaseSpeed();
 
-	uint8_t m_flagAsyncTask = 0;
-	CombatDamage m_combatDamage;
-	std::vector<uint16_t> attachedEffectList;
-	std::string shader;
+	friend class Player;
+	friend class Monster;
+	friend class Npc;
 };
