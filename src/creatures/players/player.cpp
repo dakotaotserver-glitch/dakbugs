@@ -3032,7 +3032,7 @@ void Player::removeItemImbuementStats(const Imbuement* imbuement) {
 	}
 
 	if (imbuement->vibrancy != 0) {
-		paralysisDeflectionChance -= imbuement->vibrancyChance;
+		paralysisDeflectionChance -= imbuement->vibrancy;
 	}
 
 	if (requestUpdate) {
