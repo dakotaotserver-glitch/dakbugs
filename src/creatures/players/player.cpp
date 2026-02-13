@@ -2991,8 +2991,8 @@ void Player::addItemImbuementStats(const Imbuement* imbuement) {
 	}
 
 	// Vibrancy / Paralysis Deflection chance tracking
-	if (imbuement->vibrancy != 0) {
-		paralysisDeflectionChance += imbuement->vibrancy;
+	if (imbuement->paralysisDeflectionChance != 0) {
+		paralysisDeflectionChance += imbuement->paralysisDeflectionChance;
 	}
 
 	if (requestUpdate) {
@@ -3031,8 +3031,8 @@ void Player::removeItemImbuementStats(const Imbuement* imbuement) {
 		bonusCapacity = 0;
 	}
 
-	if (imbuement->vibrancy != 0) {
-		paralysisDeflectionChance -= imbuement->vibrancy;
+	if (imbuement->paralysisDeflectionChance != 0) {
+		paralysisDeflectionChance -= imbuement->paralysisDeflectionChance;
 	}
 
 	if (requestUpdate) {
@@ -5783,12 +5783,12 @@ void Player::onAddCondition(ConditionType_t type) {
 	Creature::onAddCondition(type);
 
 	// Vibrancy / Paralysis Deflection: chance to remove paralysis caused by another player.
-	if (type == CONDITION_PARALYZE && vibrancy > 0) {
+	if (type == CONDITION_PARALYZE && paralysisDeflectionChance > 0) {
 		// Conservative: only deflect if the last hit was from a player (PvP).
 		const auto lastHit = getLastHitCreature();
 		if (lastHit && lastHit->getPlayer()) {
 			const uint32_t roll = uniform_random(1, 100);
-			if (roll <= vibrancy) {
+			if (roll <= paralysisDeflectionChance) {
 				removeCondition(CONDITION_PARALYZE);
 				if (g_configManager().getBoolean(TOGGLE_IMBUEMENT_VIBRANCY_EFFECT)) {
 					g_game().addMagicEffect(getPosition(), CONST_ME_MAGIC_BLUE);
