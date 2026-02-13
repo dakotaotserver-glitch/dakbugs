@@ -2323,6 +2323,18 @@ ConditionSpeed::ConditionSpeed(ConditionId_t initId, ConditionType_t initType, i
 	Condition(initId, initType, initTicks, initBuff, initSubId), speedDelta(initChangeSpeed) { }
 
 bool ConditionSpeed::startCondition(std::shared_ptr<Creature> creature) {
+	// Paralysis Deflection (Vibrancy) - chance to block/remove paralysis
+	if (conditionType == CONDITION_PARALYZE) {
+		if (const auto player = creature ? creature->getPlayer() : nullptr) {
+			const uint32_t chance = std::min<uint32_t>(100, player->getParalysisDeflectionChance());
+			if (chance > 0 && uniform_random(1, 100) <= static_cast<int32_t>(chance)) {
+				// Ensure any existing paralysis is removed, then block this application
+				player->removeCondition(CONDITION_PARALYZE);
+				return false;
+			}
+		}
+	}
+
 	if (!Condition::startCondition(creature)) {
 		return false;
 	}
