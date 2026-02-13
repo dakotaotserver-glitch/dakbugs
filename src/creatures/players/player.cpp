@@ -5785,7 +5785,7 @@ void Player::onAddCondition(ConditionType_t type) {
 	// Vibrancy / Paralysis Deflection: chance to remove paralysis caused by another player.
 	if (type == CONDITION_PARALYZE && paralysisDeflectionChance > 0) {
 		// Conservative: only deflect if the last hit was from a player (PvP).
-		const auto lastHit = getLastHitCreature();
+		
 		if (lastHit && lastHit->getPlayer()) {
 			const uint32_t roll = uniform_random(1, 100);
 			if (roll <= paralysisDeflectionChance) {
