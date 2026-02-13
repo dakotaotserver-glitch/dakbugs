@@ -2466,17 +2466,21 @@ void Player::onApplyImbuement(const Imbuement* imbuement, const std::shared_ptr<
 
 	if (itemId != ITEM_BLANK_IMBUEMENT_SCROLL) {
 		if (canAddImbuement) {
-			item->setImbuement(slot, imbuement->getID(), baseImbuement->duration);
-			// Update imbuement stats item if the item is equipped
-			if (item->getParent() == thisPlayer) {
+				// If the item is equipped, remove the previous imbuement stats (if any)
+				// BEFORE we overwrite the slot, then add the new stats.
 				ImbuementInfo oldImb;
-				if (item->getImbuementInfo(slot, &oldImb) && oldImb.imbuement) {
-					removeItemImbuementStats(oldImb.imbuement);
-				}
+				const bool itemEquipped = (item->getParent() == thisPlayer);
+				const bool hadOldImb = itemEquipped && item->getImbuementInfo(slot, &oldImb) && oldImb.imbuement;
 
-	addItemImbuementStats(imbuement);
-				updateImbuementTrackerStats();
-			}
+				item->setImbuement(slot, imbuement->getID(), baseImbuement->duration);
+
+				if (itemEquipped) {
+					if (hadOldImb) {
+						removeItemImbuementStats(oldImb.imbuement);
+					}
+					addItemImbuementStats(imbuement);
+					updateImbuementTrackerStats();
+				}
 		}
 
 	
@@ -2951,9 +2955,15 @@ void Player::setTraining(bool value) {
 	setExerciseTraining(value);
 }
 
+
 void Player::addItemImbuementStats(const Imbuement* imbuement) {
+	if (!imbuement) {
+		return;
+	}
+
 	bool requestUpdate = false;
-	// Check imbuement skills
+
+	// Skills
 	for (int32_t skill = SKILL_FIRST; skill <= SKILL_LAST; ++skill) {
 		if (imbuement->skills[skill]) {
 			requestUpdate = true;
@@ -2961,7 +2971,7 @@ void Player::addItemImbuementStats(const Imbuement* imbuement) {
 		}
 	}
 
-	// Check imbuement magic level
+	// Stats (incl. magic level points)
 	for (int32_t stat = STAT_FIRST; stat <= STAT_LAST; ++stat) {
 		if (imbuement->stats[stat]) {
 			requestUpdate = true;
@@ -2969,30 +2979,26 @@ void Player::addItemImbuementStats(const Imbuement* imbuement) {
 		}
 	}
 
-	// Add imbuement speed
+	// Speed
 	if (imbuement->speed != 0) {
 		g_game().changeSpeed(static_self_cast<Player>(), imbuement->speed);
 	}
 
-	// Add imbuement capacity
+	// Capacity (percentage)
 	if (imbuement->capacity != 0) {
 		requestUpdate = true;
 		bonusCapacity = (capacity * imbuement->capacity) / 100;
+	}
+
+	// Vibrancy / Paralysis Deflection chance tracking
+	if (imbuement->vibrancy != 0) {
+		paralysisDeflectionChance += imbuement->vibrancy;
 	}
 
 	if (requestUpdate) {
 		sendStats();
 		sendSkills();
 	}
-	    // Adicionar ESTE código:
-    if (imbuement->vibrancyChance != 0) {
-        // Aplicar proteção contra paralisia
-        // Isso pode envolver:
-        // - Aumentar uma flag de proteção
-        // - Registrar o vibrancy chance no player
-        paralysisDeflectionChance += imbuement->vibrancyChance;
-    }
-
 }
 
 void Player::removeItemImbuementStats(const Imbuement* imbuement) {
@@ -3009,7 +3015,6 @@ void Player::removeItemImbuementStats(const Imbuement* imbuement) {
 		}
 	}
 
-	// Check imbuement magic level
 	for (int32_t stat = STAT_FIRST; stat <= STAT_LAST; ++stat) {
 		if (imbuement->stats[stat]) {
 			requestUpdate = true;
@@ -3017,25 +3022,27 @@ void Player::removeItemImbuementStats(const Imbuement* imbuement) {
 		}
 	}
 
-	// Remove imbuement speed
 	if (imbuement->speed != 0) {
 		g_game().changeSpeed(static_self_cast<Player>(), -imbuement->speed);
 	}
 
-	// Remove imbuement capacity
 	if (imbuement->capacity != 0) {
 		requestUpdate = true;
 		bonusCapacity = 0;
 	}
-	    // Adicionar ESTE código:
-    if (imbuement->vibrancyChance != 0) {
-        paralysisDeflectionChance -= imbuement->vibrancyChance;
-    }
-}
+
+	if (imbuement->vibrancy != 0) {
+		if (vibrancy >= imbuement->vibrancy) {
+			vibrancy -= imbuement->vibrancy;
+		} else {
+			vibrancy = 0;
+		}
+	}
+
 	if (requestUpdate) {
 		sendStats();
 		sendSkills();
-	
+	}
 }
 
 void Player::updateImbuementTrackerStats() const {
@@ -5013,6 +5020,10 @@ uint32_t Player::getBonusCapacity() const {
 	return bonusCapacity;
 }
 
+uint32_t Player::getParalysisDeflection() const {
+	return paralysisDeflection;
+}
+
 uint32_t Player::getFreeCapacity() const {
 	if (hasFlag(PlayerFlags_t::CannotPickupItem)) {
 		return 0;
@@ -5771,61 +5782,28 @@ void Player::updateItemsLight(bool internal /*=false*/) {
 	}
 }
 
+
 void Player::onAddCondition(ConditionType_t type) {
 	Creature::onAddCondition(type);
-if (type == CONDITION_PARALYZE) {
 
-        //  1. Apenas PvP
-        Condition* condition = getCondition(CONDITION_PARALYZE);
-        if (!condition || !condition->getAttacker()) {
-            sendIcons();
-            return;
-        }
-
-        Player* attacker = condition->getAttacker()->getPlayer();
-        if (!attacker) {
-            // Não é PvP → não ativa Vibrancy
-            sendIcons();
-            return;
-        }
-
-        //  2. Vibrancy só pode estar nas boots
-        Item* boots = inventory[CONST_SLOT_FEET];
-        if (!boots) {
-            sendIcons();
-            return;
-        }
-
-        uint32_t highestChance = 0;
-
-        for (uint8_t slot = 0; slot < boots->getImbuementSlot(); ++slot) {
-            ImbuementInfo info;
-            if (!boots->getImbuementInfo(slot, &info)) {
-                continue;
-            }
-
-            if (info.imbuement && info.imbuement->vibrancyChance > highestChance) {
-                highestChance = info.imbuement->vibrancyChance;
-            }
-        }
-
-        if (highestChance > 0) {
-
-            // 3. Chance oficial (base 100)
-            uint32_t roll = uniform_random(1, 100);
-
-            if (roll <= highestChance) {
-                removeCondition(CONDITION_PARALYZE);
-                g_game().addMagicEffect(getPosition(), CONST_ME_MAGIC_BLUE);
-        }
-    }
-}
-	if (type == CONDITION_OUTFIT && isMounted()) {
-		dismount();
-		wasMounted = true;
+	// Vibrancy / Paralysis Deflection: chance to remove paralysis caused by another player.
+	if (type == CONDITION_PARALYZE && vibrancy > 0) {
+		// Conservative: only deflect if the last hit was from a player (PvP).
+		const auto lastHit = getLastHitCreature();
+		if (lastHit && lastHit->getPlayer()) {
+			const uint32_t roll = uniform_random(1, 100);
+			if (roll <= vibrancy) {
+				removeCondition(CONDITION_PARALYZE);
+				if (g_configManager().getBoolean(TOGGLE_IMBUEMENT_VIBRANCY_EFFECT)) {
+					g_game().addMagicEffect(getPosition(), CONST_ME_MAGIC_BLUE);
+				}
+			}
+		}
 	}
 
-	sendIcons();
+	if (type == CONDITION_OUTFIT && mayNotMove) {
+		sendIcons();
+	}
 }
 
 void Player::onAddCombatCondition(ConditionType_t type) {
@@ -11632,11 +11610,6 @@ void Player::applyImbuementScrollToItem(const uint16_t scrollId, const std::shar
 
 		// Update imbuement stats item if the item is equipped
 		if (item->getParent() == getPlayer()) {
-			ImbuementInfo oldImb;
-			if (item->getImbuementInfo(slot, &oldImb) && oldImb.imbuement) {
-				removeItemImbuementStats(oldImb.imbuement);
-			}
-
 			addItemImbuementStats(imbuement);
 			updateImbuementTrackerStats();
 		}
