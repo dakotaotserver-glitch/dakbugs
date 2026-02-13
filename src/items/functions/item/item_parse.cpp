@@ -97,7 +97,7 @@ void ItemParse::parseDummyRate(pugi::xml_node attributeNode, ItemType &itemType)
 			continue;
 		}
 
-		auto stringValue = asLowerCaseString(subKeyAttribute.as_string());
+		auto stringValue = normalizeImbuementKey(subKeyAttribute.as_string());
 		if (stringValue == "rate") {
 			const uint16_t rate = subValueAttribute.as_uint();
 			Item::items.addDummyId(itemType.id, rate);
@@ -654,7 +654,7 @@ void ItemParse::parseFieldCombatDamage(const std::shared_ptr<ConditionDamage> &c
 			continue;
 		}
 
-		auto stringValue = asLowerCaseString(subKeyAttribute.as_string());
+		auto stringValue = normalizeImbuementKey(subKeyAttribute.as_string());
 		if (stringValue == "ticks") {
 			combatTicks = pugi::cast<uint32_t>(subValueAttribute.value());
 		} else if (stringValue == "count") {
@@ -794,9 +794,51 @@ void ItemParse::parseAllowDistanceRead(const std::string &stringValue, pugi::xml
 }
 
 void ItemParse::parseImbuement(const std::string &stringValue, pugi::xml_node attributeNode, pugi::xml_attribute valueAttribute, ItemType &itemType) {
-	if (stringValue != "imbuementslot") {
+	// There are two common representations in items.xml:
+	// 1) Nested under <attribute key="imbuementslot" value="N"> ... </attribute>
+	// 2) Flat: <attribute key="<imbuement name>" value="tier"/>  (some forks use this)
+	//
+	// Support BOTH to be resilient against custom datapacks.
+
+// Normalize keys so XML can use spaces/underscores and accidental extra whitespace.
+auto normalizeImbuementKey = [](std::string key) {
+	key = asLowerCaseString(key);
+	// trim
+	key.erase(key.begin(), std::find_if(key.begin(), key.end(), [](unsigned char ch) { return !std::isspace(ch); }));
+	key.erase(std::find_if(key.rbegin(), key.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), key.end());
+	// convert '_' to ' ' and collapse whitespace
+	std::replace(key.begin(), key.end(), '_', ' ');
+	std::string out;
+	out.reserve(key.size());
+	bool prevSpace = false;
+	for (unsigned char ch : key) {
+		if (std::isspace(ch)) {
+			if (!prevSpace) out.push_back(' ');
+			prevSpace = true;
+		} else {
+			out.push_back(static_cast<char>(ch));
+			prevSpace = false;
+		}
+	}
+	return out;
+};
+
+const std::string loweredKey = normalizeImbuementKey(stringValue);
+
+	// Flat form: key itself is an imbuement type.
+	if (loweredKey != "imbuementslot") {
+		const auto it = ImbuementsTypeMap.find(loweredKey);
+		if (it != ImbuementsTypeMap.end()) {
+			// If the item didn't declare slots explicitly, ensure at least 1.
+			if (itemType.imbuementSlot == 0) {
+				itemType.imbuementSlot = 1;
+			}
+			itemType.setImbuementType(it->second, pugi::cast<uint16_t>(valueAttribute.value()));
+		}
 		return;
 	}
+
+	// Nested form.
 	itemType.imbuementSlot = pugi::cast<uint8_t>(valueAttribute.value());
 
 	for (const auto &subAttributeNode : attributeNode.children()) {
@@ -810,16 +852,27 @@ void ItemParse::parseImbuement(const std::string &stringValue, pugi::xml_node at
 			continue;
 		}
 
-		const auto &itemMap = ImbuementsTypeMap.find(asLowerCaseString(subKeyAttribute.as_string()));
-		if (itemMap != ImbuementsTypeMap.end()) {
-			const ImbuementTypes_t imbuementType = getImbuementType(asLowerCaseString(subKeyAttribute.as_string()));
-			if (imbuementType != IMBUEMENT_NONE) {
-				itemType.setImbuementType(imbuementType, pugi::cast<uint16_t>(subValueAttribute.value()));
-				continue;
-			}
-		} else {
-			g_logger().warn("[ParseImbuement::initParseImbuement] - Unknown imbuement type: {} (key: {})", subValueAttribute.as_string(), subKeyAttribute.as_string());
+		// Be tolerant with stray spaces/case in datapacks.
+		std::string subKey = normalizeImbuementKey(subKeyAttribute.as_string());
+		// Trim leading/trailing whitespace to avoid issues with XML having extra spaces.
+		subKey.erase(subKey.begin(), std::find_if(subKey.begin(), subKey.end(), [](unsigned char ch) {
+			return !std::isspace(ch);
+		}));
+		subKey.erase(std::find_if(subKey.rbegin(), subKey.rend(), [](unsigned char ch) {
+			return !std::isspace(ch);
+		}).base(), subKey.end());
+
+		const auto it = ImbuementsTypeMap.find(subKey);
+		if (it != ImbuementsTypeMap.end()) {
+			itemType.setImbuementType(it->second, pugi::cast<uint16_t>(subValueAttribute.value()));
+			continue;
 		}
+
+		g_logger().warn(
+			"[ParseImbuement::initParseImbuement] - Unknown imbuement type key: '{}' (value: '{}')",
+			subKeyAttribute.as_string(),
+			subValueAttribute.as_string()
+		);
 	}
 }
 
@@ -855,7 +908,7 @@ void ItemParse::parseAugment(const std::string &stringValue, pugi::xml_node attr
 					}
 				}
 
-				const auto augmentName = asLowerCaseString(subKeyAttribute.as_string());
+				const auto augmentName = normalizeImbuementKey(subKeyAttribute.as_string());
 				const pugi::xml_object_range<pugi::xml_node_iterator> augmentValueAttributeNode = subAttributeNode.children();
 				if (!augmentValueAttributeNode.empty()) {
 					const pugi::xml_node augmentValueNode = *augmentValueAttributeNode.begin();
@@ -1022,7 +1075,7 @@ void ItemParse::createAndRegisterScript(ItemType &itemType, pugi::xml_node attri
 			continue;
 		}
 
-		auto stringKey = asLowerCaseString(subKeyAttribute.as_string());
+		auto stringKey = normalizeImbuementKey(subKeyAttribute.as_string());
 		if (stringKey == "slot") {
 			auto slotName = asLowerCaseString(subValueAttribute.as_string());
 			if (moveevent && (moveevent->getEventType() == MOVE_EVENT_EQUIP || moveevent->getEventType() == MOVE_EVENT_DEEQUIP)) {
@@ -1227,7 +1280,7 @@ void ItemParse::parseUnscriptedItems(std::string_view stringValue, pugi::xml_nod
 						continue;
 					}
 
-					auto stringKey = asLowerCaseString(subKeyAttribute.as_string());
+					auto stringKey = normalizeImbuementKey(subKeyAttribute.as_string());
 					if (stringKey == "eventtype") {
 						const auto &eventTypeName = asLowerCaseString(subValueAttribute.as_string());
 						eventType = getMoveEventType(eventTypeName);
@@ -1257,7 +1310,7 @@ void ItemParse::parseUnscriptedItems(std::string_view stringValue, pugi::xml_nod
 						continue;
 					}
 
-					auto stringKey = asLowerCaseString(subKeyAttribute.as_string());
+					auto stringKey = normalizeImbuementKey(subKeyAttribute.as_string());
 					if (stringKey == "weapontype") {
 						weaponType = getWeaponType(subValueAttribute.as_string());
 						g_logger().trace("Found weapon type '{}''", subValueAttribute.as_string());
