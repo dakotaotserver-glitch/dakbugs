@@ -543,6 +543,7 @@ public:
 	uint32_t getBaseCapacity() const;
 
 	uint32_t getCapacity() const;
+	uint32_t getParalysisDeflectionChance() const { return paralysisDeflectionChance; }
 
 	uint32_t getBonusCapacity() const;
 
@@ -1536,6 +1537,7 @@ private:
 	uint32_t inventoryWeight = 0;
 	uint32_t capacity = 40000;
 	uint32_t bonusCapacity = 0;
+	uint32_t paralysisDeflectionChance = 0;
 
 	std::bitset<CombatType_t::COMBAT_COUNT> m_damageImmunities;
 	std::bitset<ConditionType_t::CONDITION_COUNT> m_conditionImmunities;
