@@ -5797,8 +5797,11 @@ void Player::onAddCondition(ConditionType_t type) {
 		}
 	}
 
-	if (type == CONDITION_OUTFIT && mayNotMove) {
-		sendIcons();
+	if (type == CONDITION_OUTFIT && isMounted()) {
+		dismount();
+		wasMounted = true;
+	}
+	sendIcons();
 	}
 }
 
