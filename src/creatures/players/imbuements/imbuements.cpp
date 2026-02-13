@@ -319,7 +319,7 @@ bool Imbuements::loadFromXml(bool /* reloading */) {
 							continue;
 						}
 
-						imbuement.vibrancy = pugi::cast<uint32_t>(attr.value());
+						imbuement.paralysisDeflectionChance = pugi::cast<uint32_t>(attr.value());
 					}
 				}
 			}
